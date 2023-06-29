@@ -86,6 +86,8 @@ float baca_nilai_tegangan3(int pin){
   return hasil;
 }
 
+// float baca sensor suhu
+
 void loop() {
   // pembacaan sensor arus dan adc 
   float arus1 = baca_nilai_arus1(arus_satu);
@@ -137,19 +139,19 @@ void loop() {
   lcd.print(tegangan1);
   lcd.print("V");
   lcd.print (" ADC1 ");
-  lcd.print (nilaiarusADC1);
+  lcd.print (nilaiteganganADC1);
   lcd.setCursor(0, 1);
   lcd.print("V2: ");      
   lcd.print(tegangan2);
   lcd.print("V");
   lcd.print (" ADC2 ");
-  lcd.print (nilaiarusADC2);
+  lcd.print (nilaiteganganADC2);
   lcd.setCursor(0, 2);
   lcd.print("V3: ");      
   lcd.print(tegangan3);
   lcd.print("V");
   lcd.print (" ADC3 ");
-  lcd.print (nilaiarusADC3);
+  lcd.print (nilaiteganganADC3);
   delay(1000);
 }
 
