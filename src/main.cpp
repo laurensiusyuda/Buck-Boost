@@ -11,15 +11,15 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define DHTPIN 15  
 #define DHTTYPE DHT11   
 
-// inisialisasi pin sensor arus (pin 34,35,32)
-#define arus_satu 34 
-#define arus_dua 35
-#define arus_tiga 32
+// inisialisasi pin sensor arus (pin 33,25,26)
+#define arus_satu 33 
+#define arus_dua 25
+#define arus_tiga 26
 
-// inisialisasi pin sensor tegangan (pin 33,25,26)
-#define tegangan_satu 33
-#define tegangan_dua 25 
-#define tegangan_tiga 26 
+// inisialisasi pin sensor tegangan (pin 34,35,32)
+#define tegangan_satu 34
+#define tegangan_dua 35 
+#define tegangan_tiga 32 
 
 DHT dht(DHTPIN, DHTTYPE);
 float sensitivitas = 66;
@@ -41,7 +41,7 @@ void setup() {
   pinMode(tegangan_dua, INPUT);
   pinMode(tegangan_tiga, INPUT);
   // pin mode sensor suhu
-    dht.begin();
+  dht.begin();
 }
 
 // baca nilai adc 
