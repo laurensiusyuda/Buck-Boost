@@ -64,20 +64,26 @@ float baca_nilai_arus3(int pin){
 
 // baca sensor tegangan 1
 float baca_nilai_tegangan1(int pin){
-  int nilaiTegangan1 = analogRead(pin);
-  float Vsensor = nilaiTegangan1*(3.3 / 4095.0);
+  int nilaiTegangan = analogRead(pin);
+  float Vsensor = nilaiTegangan*(3.3 / 4095.0);
   float hasil = (1.01*(Vsensor / (R2/(R1+R2))+0.6555551));
   return hasil; 
 }
 
 // baca sensor tegangan 2 
 float baca_nilai_tegangan2(int pin){
-
+  int nilaiTegangan = analogRead(pin);
+  float Vsensor = nilaiTegangan*(3.3 / 4095.0);
+  float hasil = (1.01*(Vsensor / (R2/(R1+R2))+0.6658566));
+  return hasil;
 }
 
 // baca sensor tegangan 3 
 float baca_nilai_tegangan3(int pin){
-
+  int nilaiTegangan = analogRead(pin);
+  float Vsensor = nilaiTegangan*(3.3 / 4095.0);
+  float hasil = (1.01*(Vsensor / (R2/(R1+R2))+0.6628513));
+  return hasil;
 }
 
 void loop() {
@@ -92,13 +98,17 @@ void loop() {
 
   // pembacaan sensor tegangan dan adc 
   float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
-  float tegangan1 =  baca_nilai_tegangan2(tegangan_dua);
-  float tegangan1 =  baca_nilai_tegangan3(tegangan_tiga);
+  float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
+  float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
 
   float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
-  float nilaiteganganADC2 = baca_nilai_adc(tegangan_satu);
-  float nilaiteganganADC3 = baca_nilai_adc(tegangan_satu);
+  float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
+  float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
 
+  // pembacaan sensor suhu
+
+
+  // tampilkan sensor arus pada lcd 
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("I1: ");      
@@ -120,5 +130,26 @@ void loop() {
   lcd.print (nilaiarusADC3);
   delay(1000);
 
+  // tampilkan sensor tegangan pada lcd
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("V1: ");      
+  lcd.print(tegangan1);
+  lcd.print("V");
+  lcd.print (" ADC1 ");
+  lcd.print (nilaiarusADC1);
+  lcd.setCursor(0, 1);
+  lcd.print("V2: ");      
+  lcd.print(tegangan2);
+  lcd.print("V");
+  lcd.print (" ADC2 ");
+  lcd.print (nilaiarusADC2);
+  lcd.setCursor(0, 2);
+  lcd.print("V3: ");      
+  lcd.print(tegangan3);
+  lcd.print("V");
+  lcd.print (" ADC3 ");
+  lcd.print (nilaiarusADC3);
+  delay(1000);
 }
 
