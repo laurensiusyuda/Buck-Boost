@@ -1,8 +1,15 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 
 // inisialisasi pin lcd
 LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+// inisialisasi pin suhu
+#define DHTPIN 15  
+#define DHTTYPE DHT11   
 
 // inisialisasi pin sensor arus (pin 34,35,32)
 #define arus_satu 34 
@@ -14,6 +21,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define tegangan_dua 25 
 #define tegangan_tiga 26 
 
+DHT dht(DHTPIN, DHTTYPE);
 float sensitivitas = 66;
 float ACSoffset = 1650;
 
@@ -24,12 +32,16 @@ void setup() {
   Serial.begin(9600);
   lcd.init();
   lcd.backlight();
+  // pin modes sensor arus 
   pinMode(arus_satu, INPUT);
   pinMode(arus_dua, INPUT);
   pinMode(arus_tiga, INPUT);
+  // pin mode sensor tegangan 
   pinMode(tegangan_satu, INPUT);
   pinMode(tegangan_dua, INPUT);
   pinMode(tegangan_tiga, INPUT);
+  // pin mode sensor suhu
+    dht.begin();
 }
 
 // baca nilai adc 
@@ -87,6 +99,10 @@ float baca_nilai_tegangan3(int pin){
 }
 
 // float baca sensor suhu
+float baca_sensor_suhu(){
+  float celcius = dht.readTemperature();
+  return celcius;
+}
 
 void loop() {
   // pembacaan sensor arus dan adc 
@@ -108,7 +124,7 @@ void loop() {
   float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
 
   // pembacaan sensor suhu
-
+  float suhu = baca_sensor_suhu();
 
   // tampilkan sensor arus pada lcd 
   lcd.clear();
@@ -152,6 +168,14 @@ void loop() {
   lcd.print("V");
   lcd.print (" ADC3 ");
   lcd.print (nilaiteganganADC3);
+  delay(1000);
+
+  // tampilkan sensor suhu pada lcd 
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Suhu: ");      
+  lcd.print(tegangan1);
+  lcd.print("suhu");
   delay(1000);
 }
 
