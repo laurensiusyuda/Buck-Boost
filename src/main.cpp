@@ -146,13 +146,13 @@ unsigned char error_nm(){
   {
     Enegative_middle = 1;
   }
-  else if (error >= -3 && error <= -2)
+  else if (error > -3 && error < -2)
   {
     Enegative_middle = (error - (-3)) / (-2 - (-3));
   }
-   else if (error >= -2 && error <= -1)
+   else if (error > -2 && error <-1)
   {
-    Enegative_middle = (error) / (-2 - (-3));
+    Enegative_middle = (-1 - error) / (-1 - (-2));
   }
   else if (error >= -1)
   {
@@ -163,20 +163,40 @@ unsigned char error_nm(){
 
 unsigned char error_ns(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-
+  if (error <= -2)
+  {
+    Enegative_small = 1;
+  }
+  else if (error > -2 && error < -1)
+  {
+    Enegative_small = (error - (-2)) / (-1 - (-2));
+  }
+   else if (error > -1 && error < 0)
+  {
+    Enegative_small = (0 - error) / (0 - (-1));
+  }
+  else if (error >= 0)
+  {
+    Enegative_small = 0;
+  }
+  return Enegative_small;
 }
+
 unsigned char error_z(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-
+ 
 }
+
 unsigned char error_ps(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-
+ 
 }
+
 unsigned char error_pm(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-
+ 
 }
+
 unsigned char error_pb(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
 
