@@ -19,7 +19,10 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 // inisialisasi pin sensor tegangan (pin 34,35,32)
 #define tegangan_satu 34
 #define tegangan_dua 35 
-#define tegangan_tiga 32 
+#define tegangan_tiga 32
+
+// inisialisasi pin kontrol buck boost 
+#define pin_buck 23
 
 DHT dht(DHTPIN, DHTTYPE);
 float sensitivitas = 66;
@@ -27,6 +30,10 @@ float ACSoffset = 1650;
 
 float R1 = 30000.0;
 float R2 = 7500.0;
+
+// membuat setpoit tegangan 
+float setpointtegangan = 14.4;
+float voltagetolerance = 3.0;
 
 void setup() {
   Serial.begin(9600);
@@ -103,6 +110,9 @@ float baca_sensor_suhu(){
   float celcius = dht.readTemperature();
   return celcius;
 }
+
+// float fuzzy 
+// 1. Mencari fungsi keanggotaan 
 
 void loop() {
   // pembacaan sensor arus dan adc 
