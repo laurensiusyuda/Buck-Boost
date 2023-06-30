@@ -130,201 +130,8 @@ float baca_sensor_suhu(){
   return celcius;
 }
 
-//fuzifikasi error 
-unsigned char error_nb(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= -3)
-  {
-    Enegative_big = 1;
-  }
-  else if (error >= -3 && error <= -2)
-  {
-    Enegative_big = (-2 - error) / (-2 - (-3));
-  }
-  else if (error >= -2)
-  {
-    Enegative_big = 0;
-  }
-  return Enegative_big;
-}
-
-unsigned char error_nm(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= -3)
-  {
-    Enegative_middle = 0;
-  }
-  else if (error > -3 && error < -2)
-  {
-    Enegative_middle = (error - (-3)) / (-2 - (-3));
-  }
-   else if (error > -2 && error <-1)
-  {
-    Enegative_middle = (-1 - error) / (-1 - (-2));
-  }
-  else if (error >= -1)
-  {
-    Enegative_middle = 0;
-  }
-  return Enegative_middle;
-}
-
-unsigned char error_ns(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= -2)
-  {
-    Enegative_small = 0;
-  }
-  else if (error > -2 && error < -1)
-  {
-    Enegative_small = (error - (-2)) / (-1 - (-2));
-  }
-   else if (error > -1 && error < 0)
-  {
-    Enegative_small = (0 - error) / (0 - (-1));
-  }
-  else if (error >= 0)
-  {
-    Enegative_small = 0;
-  }
-  return Enegative_small;
-}
-
-unsigned char error_z(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= -1)
-  {
-    E_zero = 0;
-  }
-  else if (error > -2 && error < -1)
-  {
-    E_zero = (error - (-2)) / (-1 - (-2));
-  }
-   else if (error > -1 && error < 0)
-  {
-    E_zero = (0 - error) / (0 - (-1));
-  }
-  else if (error >= 1)
-  {
-    E_zero = 0;
-  }
-  return E_zero;
-}
-
-unsigned char error_ps(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= 0)
-  {
-    Epositif_small = 0;
-  }
-  else if (error > 0 && error < 1)
-  {
-    Epositif_small = (error - 0) / (1 - 0);
-  }
-   else if (error > 1 && error < 2)
-  {
-    Epositif_small = (2 - error) / (2 - 1);
-  }
-  else if (error >= 2)
-  {
-    Epositif_small = 0;
-  }
-  return Epositif_small;
-}
-
-unsigned char error_pm(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= 1)
-  {
-    Epositif_middle = 0;
-  }
-  else if (error > 1 && error < 2)
-  {
-    Epositif_middle = (error - 1) / (2 - 1);
-  }
-   else if (error > 2 && error < 3)
-  {
-    Epositif_middle = (3 - error) / (3 - 2);
-  }
-  else if (error >= 3)
-  {
-    Epositif_middle = 0;
-  }
-  return Epositif_middle;
-}
-
-unsigned char error_pb(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  if (error <= 2)
-  {
-    Epositif_big = 0;
-  }
-  else if (error > 2 && error < 3)
-  {
-    Epositif_big = (error - 2) / (3 - 2);
-  }
-  else if (error >= 3)
-  {
-    Epositif_big = 1;
-  }
-  return Epositif_big;
-}
-
-// fuzifikasi delta error
-unsigned char derror_nb(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-
-}
-
-unsigned char derror_nm(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-
-}
-
-unsigned char derror_ns(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-}
-
-unsigned char derror_z(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-}
-
-unsigned char derror_ps(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-}
-
-unsigned char derror_pm(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-}
-
-unsigned char derror_pb(){
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-}
-
-// fungsi void fuzzyfikasi 
-void fuzzyfikasi(){
-  error_nb();
-  error_nm();
-  error_ns();
-  error_z();
-  error_ps();
-  error_pm();
-  error_pb();
-  derror_nb();
-  derror_nm();
-  derror_ns();
-  derror_z();
-  derror_ps();
-  derror_pm();
-  derror_pb();
-}
+// fuzyfikasi error
+// fuzzfikasi delta error 
 
 void loop() {
   // pembacaan sensor arus dan adc 
@@ -347,6 +154,12 @@ void loop() {
 
   // pembacaan sensor suhu
   float suhu = baca_sensor_suhu();
+
+  // fuzzyfikasi
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
+  setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
+
 
   // tampilkan sensor arus pada lcd 
   lcd.clear();
