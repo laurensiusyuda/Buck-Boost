@@ -34,6 +34,7 @@ float R2 = 7500.0;
 //membuat setpoit tegangan 
 float setpointtegangan = 14.4;
 float previousError = 0;
+float setpreviousVoltage = 0.0;
 
 // fuzzifikasi error 
 float Enegative_big;
@@ -271,31 +272,40 @@ unsigned char error_pb(){
 
 // fuzifikasi delta error
 unsigned char derror_nb(){
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
 
 }
 
 unsigned char derror_nm(){
-  
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
+
 }
 
 unsigned char derror_ns(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
 }
 
 unsigned char derror_z(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
 }
 
 unsigned char derror_ps(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
 }
 
 unsigned char derror_pm(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
 }
 
 unsigned char derror_pb(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
 }
 
 // fungsi void fuzzyfikasi 
