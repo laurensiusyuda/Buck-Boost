@@ -4,24 +4,24 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-// inisialisasi pin lcd
+//inisialisasi pin lcd
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-// inisialisasi pin suhu
+//inisialisasi pin suhu
 #define DHTPIN 15  
 #define DHTTYPE DHT11   
 
-// inisialisasi pin sensor arus (pin 33,25,26)
+//inisialisasi pin sensor arus (pin 33,25,26)
 #define arus_satu 33 
 #define arus_dua 25
 #define arus_tiga 26
 
-// inisialisasi pin sensor tegangan (pin 34,35,32)
+//inisialisasi pin sensor tegangan (pin 34,35,32)
 #define tegangan_satu 34
 #define tegangan_dua 35 
 #define tegangan_tiga 32
 
-// inisialisasi pin kontrol buck boost 
+//inisialisasi pin kontrol buck boost 
 #define pin_buck 23
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -31,7 +31,7 @@ float ACSoffset = 1650;
 float R1 = 30000.0;
 float R2 = 7500.0;
 
-// membuat setpoit tegangan 
+//membuat setpoit tegangan 
 float setpointtegangan = 14.4;
 float voltagetolerance = 3.0;
 
@@ -51,13 +51,13 @@ void setup() {
   dht.begin();
 }
 
-// baca nilai adc 
+//baca nilai adc 
 float baca_nilai_adc(int pin){
   int nilaiADC = analogRead(pin);
   return nilaiADC;
 }
 
-// baca sensor arus 1
+//baca sensor arus 1
 float baca_nilai_arus1(int pin) {
   int nilaiArus = analogRead(pin);
   float Vsensor = (nilaiArus / 4096.00) * 3300.00;
@@ -65,7 +65,7 @@ float baca_nilai_arus1(int pin) {
   return hasil;
 }
 
-// baca sensor arus 2 
+//baca sensor arus 2 
 float baca_nilai_arus2(int pin){
   int nilaiArus = analogRead(pin);
   float Vsensor = (nilaiArus / 4096.00) * 3300.00;
@@ -73,7 +73,7 @@ float baca_nilai_arus2(int pin){
   return hasil;
 }
 
-// baca sensor arus 3 
+//baca sensor arus 3 
 float baca_nilai_arus3(int pin){
   int nilaiArus = analogRead(pin);
   float Vsensor = (nilaiArus / 4096.00) * 3300.00;
@@ -81,7 +81,7 @@ float baca_nilai_arus3(int pin){
   return hasil;
 }
 
-// baca sensor tegangan 1
+//baca sensor tegangan 1
 float baca_nilai_tegangan1(int pin){
   int nilaiTegangan = analogRead(pin);
   float Vsensor = nilaiTegangan*(3.3 / 4095.0);
@@ -89,7 +89,7 @@ float baca_nilai_tegangan1(int pin){
   return hasil; 
 }
 
-// baca sensor tegangan 2 
+//baca sensor tegangan 2 
 float baca_nilai_tegangan2(int pin){
   int nilaiTegangan = analogRead(pin);
   float Vsensor = nilaiTegangan*(3.3 / 4095.0);
@@ -97,7 +97,7 @@ float baca_nilai_tegangan2(int pin){
   return hasil;
 }
 
-// baca sensor tegangan 3 
+//baca sensor tegangan 3 
 float baca_nilai_tegangan3(int pin){
   int nilaiTegangan = analogRead(pin);
   float Vsensor = nilaiTegangan*(3.3 / 4095.0);
@@ -105,14 +105,63 @@ float baca_nilai_tegangan3(int pin){
   return hasil;
 }
 
-// float baca sensor suhu
+//baca sensor suhu
 float baca_sensor_suhu(){
   float celcius = dht.readTemperature();
   return celcius;
 }
 
-// float fuzzy 
-// 1. Mencari fungsi keanggotaan 
+//fuzifikasi error 
+unsigned char error_nb(){
+
+}
+unsigned char error_nm(){
+
+}
+unsigned char error_ns(){
+
+}
+unsigned char error_z(){
+
+}
+unsigned char error_ps(){
+
+}
+unsigned char error_pm(){
+
+}
+unsigned char error_pb(){
+
+}
+
+// fuzifikasi delta error
+unsigned char derror_nb(){
+
+}
+unsigned char derror_nm(){
+  
+}
+unsigned char derror_ns(){
+
+}
+unsigned char derror_z(){
+
+}
+unsigned char derror_ps(){
+
+}
+unsigned char derror_pm(){
+
+}
+unsigned char derror_pb(){
+
+}
+
+// fungsi void fuzzyfikasi 
+void fuzzyfikasi(){
+  
+}
+
 
 void loop() {
   // pembacaan sensor arus dan adc 
