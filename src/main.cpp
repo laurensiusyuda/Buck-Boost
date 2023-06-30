@@ -33,18 +33,25 @@ float R2 = 7500.0;
 
 //membuat setpoit tegangan 
 float setpointtegangan = 14.4;
+float previousError = 0;
 
 // fuzzifikasi error 
 float Enegative_big;
 float Enegative_middle;
 float Enegative_small;
-float Enegative_zero;
+float E_zero;
 float Epositif_small;
 float Epositif_middle;
 float Epositif_big;
 
 // fuzzifikasi delta error 
-
+float DEnegative_big;
+float DEnegative_middle;
+float DEnegative_small;
+float DE_zero;
+float DEpositif_small;
+float DEpositif_middle;
+float DEpositif_big;
 
 void setup() {
   Serial.begin(9600);
@@ -144,7 +151,7 @@ unsigned char error_nm(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
   if (error <= -3)
   {
-    Enegative_middle = 1;
+    Enegative_middle = 0;
   }
   else if (error > -3 && error < -2)
   {
@@ -165,7 +172,7 @@ unsigned char error_ns(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
   if (error <= -2)
   {
-    Enegative_small = 1;
+    Enegative_small = 0;
   }
   else if (error > -2 && error < -1)
   {
@@ -184,43 +191,109 @@ unsigned char error_ns(){
 
 unsigned char error_z(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
- 
+  if (error <= -1)
+  {
+    E_zero = 0;
+  }
+  else if (error > -2 && error < -1)
+  {
+    E_zero = (error - (-2)) / (-1 - (-2));
+  }
+   else if (error > -1 && error < 0)
+  {
+    E_zero = (0 - error) / (0 - (-1));
+  }
+  else if (error >= 1)
+  {
+    E_zero = 0;
+  }
+  return E_zero;
 }
 
 unsigned char error_ps(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
- 
+  if (error <= 0)
+  {
+    Epositif_small = 0;
+  }
+  else if (error > 0 && error < 1)
+  {
+    Epositif_small = (error - 0) / (1 - 0);
+  }
+   else if (error > 1 && error < 2)
+  {
+    Epositif_small = (2 - error) / (2 - 1);
+  }
+  else if (error >= 2)
+  {
+    Epositif_small = 0;
+  }
+  return Epositif_small;
 }
 
 unsigned char error_pm(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
- 
+  if (error <= 1)
+  {
+    Epositif_middle = 0;
+  }
+  else if (error > 1 && error < 2)
+  {
+    Epositif_middle = (error - 1) / (2 - 1);
+  }
+   else if (error > 2 && error < 3)
+  {
+    Epositif_middle = (3 - error) / (3 - 2);
+  }
+  else if (error >= 3)
+  {
+    Epositif_middle = 0;
+  }
+  return Epositif_middle;
 }
 
 unsigned char error_pb(){
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-
+  if (error <= 2)
+  {
+    Epositif_big = 0;
+  }
+  else if (error > 2 && error < 3)
+  {
+    Epositif_big = (error - 2) / (3 - 2);
+  }
+  else if (error >= 3)
+  {
+    Epositif_big = 1;
+  }
+  return Epositif_big;
 }
 
 // fuzifikasi delta error
 unsigned char derror_nb(){
 
 }
+
 unsigned char derror_nm(){
   
 }
+
 unsigned char derror_ns(){
 
 }
+
 unsigned char derror_z(){
 
 }
+
 unsigned char derror_ps(){
 
 }
+
 unsigned char derror_pm(){
 
 }
+
 unsigned char derror_pb(){
 
 }
@@ -242,7 +315,6 @@ void fuzzyfikasi(){
   derror_pm();
   derror_pb();
 }
-
 
 void loop() {
   // pembacaan sensor arus dan adc 
