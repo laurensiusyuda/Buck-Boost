@@ -33,7 +33,18 @@ float R2 = 7500.0;
 
 //membuat setpoit tegangan 
 float setpointtegangan = 14.4;
-float voltagetolerance = 3.0;
+
+// fuzzifikasi error 
+float Enegative_big;
+float Enegative_middle;
+float Enegative_small;
+float Enegative_zero;
+float Epositif_small;
+float Epositif_middle;
+float Epositif_big;
+
+// fuzzifikasi delta error 
+
 
 void setup() {
   Serial.begin(9600);
@@ -113,24 +124,61 @@ float baca_sensor_suhu(){
 
 //fuzifikasi error 
 unsigned char error_nb(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  if (error <= -3)
+  {
+    Enegative_big = 1;
+  }
+  else if (error >= -3 && error <= -2)
+  {
+    Enegative_big = (-2 - error) / (-2 - (-3));
+  }
+  else if (error >= -2)
+  {
+    Enegative_big = 0;
+  }
+  return Enegative_big;
 }
+
 unsigned char error_nm(){
-
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+  if (error <= -3)
+  {
+    Enegative_middle = 1;
+  }
+  else if (error >= -3 && error <= -2)
+  {
+    Enegative_middle = (error - (-3)) / (-2 - (-3));
+  }
+   else if (error >= -2 && error <= -1)
+  {
+    Enegative_middle = (error) / (-2 - (-3));
+  }
+  else if (error >= -1)
+  {
+    Enegative_middle = 0;
+  }
+  return Enegative_middle;
 }
+
 unsigned char error_ns(){
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
 
 }
 unsigned char error_z(){
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
 
 }
 unsigned char error_ps(){
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
 
 }
 unsigned char error_pm(){
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
 
 }
 unsigned char error_pb(){
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
 
 }
 
@@ -159,7 +207,20 @@ unsigned char derror_pb(){
 
 // fungsi void fuzzyfikasi 
 void fuzzyfikasi(){
-  
+  error_nb();
+  error_nm();
+  error_ns();
+  error_z();
+  error_ps();
+  error_pm();
+  error_pb();
+  derror_nb();
+  derror_nm();
+  derror_ns();
+  derror_z();
+  derror_ps();
+  derror_pm();
+  derror_pb();
 }
 
 
@@ -234,7 +295,7 @@ void loop() {
   lcd.setCursor(0, 0);
   lcd.print("Suhu: ");      
   lcd.print(tegangan1);
-  lcd.print("suhu");
+  lcd.print("C");
   delay(1000);
 }
 
