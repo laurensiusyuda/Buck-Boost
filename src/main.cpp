@@ -130,36 +130,18 @@ float baca_sensor_suhu(){
   return celcius;
 }
 
-// fuzyfikasi error
-// fuzzfikasi delta error 
+// nilai keanggotaan error
+
+// nilai keanggotaan delta error 
 
 void loop() {
   // pembacaan sensor arus dan adc 
   float arus1 = baca_nilai_arus1(arus_satu);
   float arus2 = baca_nilai_arus2(arus_dua);
   float arus3 = baca_nilai_arus3(arus_tiga);
-
   float nilaiarusADC1 = baca_nilai_adc(arus_satu);
   float nilaiarusADC2 = baca_nilai_adc(arus_dua);
   float nilaiarusADC3 = baca_nilai_adc(arus_tiga);
-
-  // pembacaan sensor tegangan dan adc 
-  float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
-  float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
-  float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
-
-  float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
-  float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
-  float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
-
-  // pembacaan sensor suhu
-  float suhu = baca_sensor_suhu();
-
-  // fuzzyfikasi
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-  setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
-
 
   // tampilkan sensor arus pada lcd 
   lcd.clear();
@@ -183,7 +165,15 @@ void loop() {
   lcd.print (nilaiarusADC3);
   delay(1000);
 
-  // tampilkan sensor tegangan pada lcd
+  // pembacaan sensor tegangan dan adc 
+  float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
+  float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
+  float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
+  float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
+  float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
+  float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
+
+   // tampilkan sensor tegangan pada lcd
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("V1: ");      
@@ -205,6 +195,9 @@ void loop() {
   lcd.print (nilaiteganganADC3);
   delay(1000);
 
+  // pembacaan sensor suhu
+  float suhu = baca_sensor_suhu();
+  
   // tampilkan sensor suhu pada lcd 
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -212,5 +205,16 @@ void loop() {
   lcd.print(tegangan1);
   lcd.print("C");
   delay(1000);
+
+  // mengambil data errror
+  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+
+  // mengambil data delta error
+  float deltaError = error - (setpointtegangan - setpreviousVoltage);
+  setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
+
+  // proses mencari nilai keanggotaan 
+  float NK_error = 80;
+  float NK_derror = 80;
 }
 
