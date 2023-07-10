@@ -224,6 +224,58 @@ struct fuzzyresult_derror{
   float DEpositif_big;
 };
 
+struct fuzzyresult_control {
+  float rule1;
+  float rule2;
+  float rule3;
+  float rule4;
+  float rule5;
+  float rule6;
+  float rule7;
+  float rule8;
+  float rule9;
+  float rule10;
+  float rule11;
+  float rule12;
+  float rule13;
+  float rule14;
+  float rule15;
+  float rule16;
+  float rule17;
+  float rule18;
+  float rule19;
+  float rule20;
+  float rule21;
+  float rule22;
+  float rule23;
+  float rule24;
+  float rule25;
+  float rule26;
+  float rule27;
+  float rule28;
+  float rule29;
+  float rule30;
+  float rule31;
+  float rule32;
+  float rule33;
+  float rule34;
+  float rule35;
+  float rule36;
+  float rule37;
+  float rule38;
+  float rule39;
+  float rule40;
+  float rule41;
+  float rule42;
+  float rule43;
+  float rule44;
+  float rule45;
+  float rule46;
+  float rule47;
+  float rule48;
+  float rule49;
+};
+
 fuzzyresult_error fuzzy_error(float error){
   fuzzyresult_error result;
   if (error <= -3)
@@ -384,6 +436,66 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_big = 1;
   }
   return result;
+}
+
+fuzzyresult_control fuzzy_inference(fuzzyresult_error error, fuzzyresult_derror derror) {
+  fuzzyresult_control result;
+  //Enegative_big
+  float rule1 = min(error.Enegative_big, derror.DEnegative_big);
+  float rule2 = min(error.Enegative_big, derror.DEnegative_middle);
+  float rule3 = min(error.Enegative_big, derror.DEnegative_small);
+  float rule4 = min(error.Enegative_big, derror.DE_zero);
+  float rule5 = min(error.Enegative_big, derror.DEpositif_small);
+  float rule6 = min(error.Enegative_big, derror.DEpositif_middle);
+  float rule7 = min(error.Enegative_big, derror.DEpositif_big);
+  //Enegative_middle
+  float rule8 = min(error.Enegative_middle, derror.DEnegative_big);
+  float rule9 = min(error.Enegative_middle, derror.DEnegative_middle);
+  float rule10 = min(error.Enegative_middle, derror.DEnegative_small);
+  float rule11 = min(error.Enegative_middle, derror.DE_zero);
+  float rule12 = min(error.Enegative_middle, derror.DEpositif_small);
+  float rule13 = min(error.Enegative_middle, derror.DEpositif_middle);
+  float rule14 = min(error.Enegative_middle, derror.DEpositif_big);
+  //Enegative_small
+  float rule15 = min(error.Enegative_small, derror.DEpositif_big);
+  float rule16= min(error.Enegative_small, derror.DEnegative_big);
+  float rule17= min(error.Enegative_small, derror.DEnegative_middle);
+  float rule18 = min(error.Enegative_small, derror.DEnegative_small);
+  float rule19 = min(error.Enegative_small, derror.DE_zero);
+  float rule20 = min(error.Enegative_small, derror.DEpositif_small);
+  float rule21 = min(error.Enegative_small, derror.DEpositif_middle);
+  //E_zero
+  float rule22 = min(error.E_zero, derror.DEpositif_big);
+  float rule23= min(error.E_zero, derror.DEnegative_big);
+  float rule24= min(error.E_zero, derror.DEnegative_middle);
+  float rule25 = min(error.E_zero, derror.DEnegative_small);
+  float rule26 = min(error.E_zero, derror.DE_zero);
+  float rule27 = min(error.E_zero, derror.DEpositif_small);
+  float rule28 = min(error.E_zero, derror.DEpositif_middle);
+  //Epositif_small
+  float rule29 = min(error.Epositif_small, derror.DEpositif_big);
+  float rule30 = min(error.Epositif_small, derror.DEnegative_big);
+  float rule31= min(error.Epositif_small, derror.DEnegative_middle);
+  float rule32 = min(error.Epositif_small, derror.DEnegative_small);
+  float rule33 = min(error.Epositif_small, derror.DE_zero);
+  float rule34 = min(error.Epositif_small, derror.DEpositif_small);
+  float rule35 = min(error.Epositif_small, derror.DEpositif_middle);
+  //Epositif_middle
+  float rule36 = min(error.Epositif_middle, derror.DEpositif_big);
+  float rule37 = min(error.Epositif_middle, derror.DEnegative_big);
+  float rule38 = min(error.Epositif_middle, derror.DEnegative_middle);
+  float rule39 = min(error.Epositif_middle, derror.DEnegative_small);
+  float rule40 = min(error.Epositif_middle, derror.DE_zero);
+  float rule41 = min(error.Epositif_middle, derror.DEpositif_small);
+  float rule42 = min(error.Epositif_middle, derror.DEpositif_middle);
+  //Epositif_big
+  float rule43 = min(error.Epositif_big, derror.DEpositif_big);
+  float rule44 = min(error.Epositif_big, derror.DEnegative_big);
+  float rule45 = min(error.Epositif_big, derror.DEnegative_middle);
+  float rule46 = min(error.Epositif_big, derror.DEnegative_small);
+  float rule47 = min(error.Epositif_big, derror.DE_zero);
+  float rule48 = min(error.Epositif_big, derror.DEpositif_small);
+  float rule49 = min(error.Epositif_big, derror.DEpositif_middle);
 }
 
 void loop() {
