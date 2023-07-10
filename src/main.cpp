@@ -10,6 +10,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 //inisialisasi pin suhu
 #define DHTPIN 15  
 #define DHTTYPE DHT11   
+DHT dht(DHTPIN, DHTTYPE);
 
 //inisialisasi pin sensor arus (pin 33,25,26)
 #define arus_satu 33 
@@ -22,10 +23,15 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define tegangan_tiga 32
 
 // inisialisasi pin relay
+const int relayPin1 = 27;
+const int relayPin2 = 14;
+const int relayPin3 = 12;
+const int relayPin4 = 13;
 
 //inisialisasi pin kontrol buck boost 
 #define pin_buck 23
-DHT dht(DHTPIN, DHTTYPE);
+
+// membuat setpoint untuk menghitung arus dan tegangan 
 float sensitivitas = 66;
 float ACSoffset = 1650;
 float R1 = 30000.0;
@@ -58,16 +64,24 @@ void setup() {
   Serial.begin(9600);
   lcd.init();
   lcd.backlight();
+
   // pin modes sensor arus 
   pinMode(arus_satu, INPUT);
   pinMode(arus_dua, INPUT);
   pinMode(arus_tiga, INPUT);
+
   // pin mode sensor tegangan 
   pinMode(tegangan_satu, INPUT);
   pinMode(tegangan_dua, INPUT);
   pinMode(tegangan_tiga, INPUT);
   // pin mode sensor suhu
   dht.begin();
+
+  // pin mode relay 
+  pinMode(relayPin1, OUTPUT);
+  pinMode(relayPin2, OUTPUT);
+  pinMode(relayPin3, OUTPUT);
+  pinMode(relayPin4, OUTPUT);
 }
 
 //baca nilai adc 
@@ -130,7 +144,66 @@ float baca_sensor_suhu(){
   return celcius;
 }
 
-// nilai keanggotaan error
+// fungsi mengatur relay cut ovv overcurrent buck boost 
+void cutoff_overcurrent(float arus){
+  if (arus >= 21) {
+    digitalWrite(relayPin1, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
+    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
+    digitalWrite(relayPin1, LOW); 
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: OFF Overcurrent =");
+    lcd.print(arus);
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: ON");
+  }
+}
+
+// fungsi mengatur relay cut off overcurrent baterai
+void cutoff_overcurrentbat(float arus){
+  if (arus >= 21) {
+    digitalWrite(relayPin1, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
+    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
+    digitalWrite(relayPin1, LOW); 
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: OFF Overcurrent =");
+    lcd.print(arus);
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: ON");
+  }
+}
+
+// fungsi mengantur relay cut off overvoltage  
+void cutoff_overvoltage(float tegangan){
+  if (tegangan > 12.0) {
+    digitalWrite(relayPin3, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
+    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
+    digitalWrite(relayPin3, LOW); 
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: OFF Overvoltage =");
+    lcd.print(tegangan);
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: ON");
+  }
+}
+
+// fungsi mengatur relay cut off overheat 
+void cutoff_overheat(float suhu){
+  if (suhu >= 40) {
+    digitalWrite(relayPin3, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
+    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
+    digitalWrite(relayPin3, LOW); 
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: OFF Overheat =");
+    lcd.print(suhu);
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: ON");
+  }
+}
+
 struct fuzzyresult_error{
   float Enegative_big;
   float Enegative_middle;
@@ -236,7 +309,6 @@ fuzzyresult_error fuzzy_error(float error){
   return result;
 }
 
-// nilai keanggotaan delta error 
 fuzzyresult_derror fuzzy_derror(float derror){
   fuzzyresult_derror result;
   if (derror <= -3) {
@@ -352,8 +424,8 @@ void loop() {
   float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
   float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
   float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
-
-   // tampilkan sensor tegangan pada lcd
+  
+  // tampilkan sensor tegangan pada lcd
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("V1: ");      
@@ -377,7 +449,7 @@ void loop() {
 
   // pembacaan sensor suhu
   float suhu = baca_sensor_suhu();
-  
+
   // tampilkan sensor suhu pada lcd 
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -388,13 +460,19 @@ void loop() {
 
   // mengambil data errror
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
+
   // mengambil data delta error
   float deltaError = error - (setpointtegangan - setpreviousVoltage);
   setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
-  // proses mencari nilai keanggotaan
 
-  // relay cut-off jika overcurrent pada buckboost 
   // relay cut-off jika overcurrent pada baterai 
-  // relay cut-off jika overvoltage 
-  // relay cut-off jika overheat 
+  cutoff_overcurrentbat(arus2);
+  // relay cut-off jika overcurrent pada buckboost
+  cutoff_overcurrent(arus1);
+  // relay cut-off jika overvoltage
+  cutoff_overvoltage(tegangan2);
+  // relay cut-off jika overheat
+  cutoff_overheat(suhu);
+
+  // proses mencari nilai keanggotaan
 }
