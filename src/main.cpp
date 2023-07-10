@@ -21,13 +21,13 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 #define tegangan_dua 35 
 #define tegangan_tiga 32
 
+// inisialisasi pin relay
+
 //inisialisasi pin kontrol buck boost 
 #define pin_buck 23
-
 DHT dht(DHTPIN, DHTTYPE);
 float sensitivitas = 66;
 float ACSoffset = 1650;
-
 float R1 = 30000.0;
 float R2 = 7500.0;
 
@@ -131,8 +131,188 @@ float baca_sensor_suhu(){
 }
 
 // nilai keanggotaan error
+struct fuzzyresult_error{
+  float Enegative_big;
+  float Enegative_middle;
+  float Enegative_small;
+  float E_zero;
+  float Epositif_small;
+  float Epositif_middle;
+  float Epositif_big;
+};
+
+struct fuzzyresult_derror{
+  float DEnegative_big;
+  float DEnegative_middle;
+  float DEnegative_small;
+  float DE_zero;
+  float DEpositif_small;
+  float DEpositif_middle;
+  float DEpositif_big;
+};
+
+fuzzyresult_error fuzzy_error(float error){
+  fuzzyresult_error result;
+  if (error <= -3)
+  {
+    result.Enegative_big = 1;
+    result.Enegative_middle = 0;
+    result.Enegative_small = 0;
+    result.E_zero = 0;
+    result.Epositif_small = 0;
+    result.Epositif_middle = 0;
+    result.Epositif_big = 0;
+  }
+  else if (error > -3 && error < -2)
+  {
+    result.Enegative_big = (-2 - (error))/(-2 - (-3)); // turun
+    result.Enegative_middle =((error) - (-3))/(-2 - (-3)); //naik
+    result.Enegative_small = 0;
+    result.E_zero = 0;
+    result.Epositif_small = 0;
+    result.Epositif_middle = 0;
+    result.Epositif_big = 0;
+  }
+  else if (error > -2 && error < -1)
+  {
+    result.Enegative_big = 0;
+    result.Enegative_middle =(-1 - (error))/(-1 - (-2));
+    result.Enegative_small = ((error) - (-2))/(-1 - (-2));
+    result.E_zero = 0;
+    result.Epositif_small = 0;
+    result.Epositif_middle = 0;
+    result.Epositif_big = 0;
+  }
+  else if (error > -1 && error < 0)
+  {
+    result.Enegative_big = 0;
+    result.Enegative_middle =0;
+    result.Enegative_small = (0 - (error))/(0 - (-1));
+    result.E_zero = ((error) - (-1))/(0 - (-1));
+    result.Epositif_small = 0;
+    result.Epositif_middle = 0;
+    result.Epositif_big = 0;
+  }
+  else if (error > 0 && error < 1)
+  {
+    result.Enegative_big = 0;
+    result.Enegative_middle =0;
+    result.Enegative_small = 0;
+    result.E_zero = (1 - (error))/(1 - 0);
+    result.Epositif_small = ((error) - 0)/(1 - 0);
+    result.Epositif_middle = 0;
+    result.Epositif_big = 0;
+  } 
+  else if (error > 1 && error < 2)
+  {
+    result.Enegative_big = 0;
+    result.Enegative_middle =0;
+    result.Enegative_small = 0;
+    result.E_zero = 0;
+    result.Epositif_small = (2 - (error))/(2 - 1);
+    result.Epositif_middle = ((error) - 1)/(2 - 1);
+    result.Epositif_big = 0;
+  } 
+  else if (error > 2 && error < 3)
+  {
+    result.Enegative_big = 0;
+    result.Enegative_middle =0;
+    result.Enegative_small = 0;
+    result.E_zero = 0;
+    result.Epositif_small = 0;
+    result.Epositif_middle = (3 - (error))/(3 - 2);
+    result.Epositif_big = ((error) - 2)/(3 - 2);
+  } 
+  else if (error >= 3)
+  {
+    result.Enegative_big = 0;
+    result.Enegative_middle =0;
+    result.Enegative_small = 0;
+    result.E_zero = 0;
+    result.Epositif_small = 0;
+    result.Epositif_middle = 0;
+    result.Epositif_big = 1;
+  }
+  return result;
+}
 
 // nilai keanggotaan delta error 
+fuzzyresult_derror fuzzy_derror(float derror){
+  fuzzyresult_derror result;
+  if (derror <= -3) {
+    result.DEnegative_big = 1;
+    result.DEnegative_middle = 0;
+    result.DEnegative_small = 0;
+    result.DE_zero = 0;
+    result.DEpositif_small = 0;
+    result.DEpositif_middle = 0;
+    result.DEpositif_big = 0;
+  }
+  else if (derror > -3 && derror < -2) {
+    result.DEnegative_big = (-2 - derror) / (-2 - (-3));
+    result.DEnegative_middle = (derror - (-3)) / (-2 - (-3));
+    result.DEnegative_small = 0;
+    result.DE_zero = 0;
+    result.DEpositif_small = 0;
+    result.DEpositif_middle = 0;
+    result.DEpositif_big = 0;
+  }
+  else if (derror > -2 && derror < -1) {
+    result.DEnegative_big = 0;
+    result.DEnegative_middle = (-1 - derror) / (-1 - (-2));
+    result.DEnegative_small = (derror - (-2)) / (-1 - (-2));
+    result.DE_zero = 0;
+    result.DEpositif_small = 0;
+    result.DEpositif_middle = 0;
+    result.DEpositif_big = 0;
+  }
+  else if (derror > -1 && derror < 0) {
+    result.DEnegative_big = 0;
+    result.DEnegative_middle = 0;
+    result.DEnegative_small = (0 - derror) / (0 - (-1));
+    result.DE_zero = (derror - (-1)) / (0 - (-1));
+    result.DEpositif_small = 0;
+    result.DEpositif_middle = 0;
+    result.DEpositif_big = 0;
+  }
+  else if (derror > 0 && derror < 1) {
+    result.DEnegative_big = 0;
+    result.DEnegative_middle = 0;
+    result.DEnegative_small = 0;
+    result.DE_zero = (1 - derror) / (1 - 0);
+    result.DEpositif_small = (derror - 0) / (1 - 0);
+    result.DEpositif_middle = 0;
+    result.DEpositif_big = 0;
+  }
+  else if (derror > 1 && derror < 2) {
+    result.DEnegative_big = 0;
+    result.DEnegative_middle = 0;
+    result.DEnegative_small = 0;
+    result.DE_zero = 0;
+    result.DEpositif_small = (2 - derror) / (2 - 1);
+    result.DEpositif_middle = (derror - 1) / (2 - 1);
+    result.DEpositif_big = 0;
+  }
+  else if (derror > 2 && derror < 3) {
+    result.DEnegative_big = 0;
+    result.DEnegative_middle = 0;
+    result.DEnegative_small = 0;
+    result.DE_zero = 0;
+    result.DEpositif_small = 0;
+    result.DEpositif_middle = (3 - derror) / (3 - 2);
+    result.DEpositif_big = (derror - 2) / (3 - 2);
+  }
+  else if (derror >= 3) {
+    result.DEnegative_big = 0;
+    result.DEnegative_middle = 0;
+    result.DEnegative_small = 0;
+    result.DE_zero = 0;
+    result.DEpositif_small = 0;
+    result.DEpositif_middle = 0;
+    result.DEpositif_big = 1;
+  }
+  return result;
+}
 
 void loop() {
   // pembacaan sensor arus dan adc 
@@ -208,13 +388,13 @@ void loop() {
 
   // mengambil data errror
   float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-
   // mengambil data delta error
   float deltaError = error - (setpointtegangan - setpreviousVoltage);
   setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
+  // proses mencari nilai keanggotaan
 
-  // proses mencari nilai keanggotaan 
-  float NK_error = 80;
-  float NK_derror = 80;
+  // relay cut-off jika overcurrent pada buckboost 
+  // relay cut-off jika overcurrent pada baterai 
+  // relay cut-off jika overvoltage 
+  // relay cut-off jika overheat 
 }
-
