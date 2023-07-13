@@ -29,7 +29,8 @@ const int relayPin3 = 12;
 const int relayPin4 = 13;
 
 //inisialisasi pin kontrol buck boost 
-#define pin_buck 23
+const int pwmChannel18 = 0;
+const int pwmChannel19 = 1;
 const int pwmFreq = 40000;
 const int pwmResolution = 8;
 
@@ -66,29 +67,28 @@ void setup() {
   Serial.begin(9600);
   lcd.init();
   lcd.backlight();
-
   // pin modes sensor arus 
   pinMode(arus_satu, INPUT);
   pinMode(arus_dua, INPUT);
   pinMode(arus_tiga, INPUT);
-
   // pin mode sensor tegangan 
   pinMode(tegangan_satu, INPUT);
   pinMode(tegangan_dua, INPUT);
   pinMode(tegangan_tiga, INPUT);
   // pin mode sensor suhu
   dht.begin();
-
   // pin mode relay 
   pinMode(relayPin1, OUTPUT);
   pinMode(relayPin2, OUTPUT);
   pinMode(relayPin3, OUTPUT);
   pinMode(relayPin4, OUTPUT);
-  
   //mengatur pwm
-  ledcSetup(pin_buck, pwmFreq, pwmResolution);
-  ledcAttachPin(23, pin_buck);
+  ledcSetup(pwmChannel18, pwmFreq, pwmResolution);
+  ledcAttachPin(18, pwmChannel18);
+  ledcSetup(pwmChannel19, pwmFreq, pwmResolution);
+  ledcAttachPin(19, pwmChannel19);
 }
+
 
 //baca nilai adc 
 float baca_nilai_adc(int pin){
@@ -232,12 +232,12 @@ struct fuzzyresult_derror{
 
 struct fuzzyresult_control {
   float output[49];
+  float outputmin[49];
 };
-
 
 fuzzyresult_error fuzzy_error(float error){
   fuzzyresult_error result;
-  if (error <= -3)
+  if (error <= -9)
   {
     result.Enegative_big = 1;
     result.Enegative_middle = 0;
@@ -247,67 +247,67 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error > -3 && error < -2)
+  else if (error >= -9 && error <= -6)
   {
-    result.Enegative_big = (-2 - (error))/(-2 - (-3)); // turun
-    result.Enegative_middle =((error) - (-3))/(-2 - (-3)); //naik
+    result.Enegative_big = (-6 - (error))/(-6 - (-9));
+    result.Enegative_middle =((error) - (-9))/(-6 - (-9));
     result.Enegative_small = 0;
     result.E_zero = 0;
     result.Epositif_small = 0;
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error > -2 && error < -1)
+  else if (error >= -6 && error <= -3)
   {
     result.Enegative_big = 0;
-    result.Enegative_middle =(-1 - (error))/(-1 - (-2));
-    result.Enegative_small = ((error) - (-2))/(-1 - (-2));
+    result.Enegative_middle =(-3 - (error))/(-3 - (-6));
+    result.Enegative_small = ((error) - (-6))/(-3 - (-6));
     result.E_zero = 0;
     result.Epositif_small = 0;
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error > -1 && error < 0)
+  else if (error >= -3 && error <= 0)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
-    result.Enegative_small = (0 - (error))/(0 - (-1));
-    result.E_zero = ((error) - (-1))/(0 - (-1));
+    result.Enegative_small = (0 - (error))/(0 - (-3));
+    result.E_zero = ((error) - (-3))/(0 - (-3));
     result.Epositif_small = 0;
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error > 0 && error < 1)
+  else if (error >= 0 && error <= 3)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
     result.Enegative_small = 0;
-    result.E_zero = (1 - (error))/(1 - 0);
-    result.Epositif_small = ((error) - 0)/(1 - 0);
+    result.E_zero = (3 - (error))/(3 - 0);
+    result.Epositif_small = ((error) - 0)/(3 - 0);
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   } 
-  else if (error > 1 && error < 2)
+  else if (error >= 3 && error <= 6)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
     result.Enegative_small = 0;
     result.E_zero = 0;
-    result.Epositif_small = (2 - (error))/(2 - 1);
-    result.Epositif_middle = ((error) - 1)/(2 - 1);
+    result.Epositif_small = (6 - (error))/(6 - 3);
+    result.Epositif_middle = ((error) - 3)/(6 - 3);
     result.Epositif_big = 0;
   } 
-  else if (error > 2 && error < 3)
+  else if (error >= 6 && error <= 9)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
     result.Enegative_small = 0;
     result.E_zero = 0;
     result.Epositif_small = 0;
-    result.Epositif_middle = (3 - (error))/(3 - 2);
-    result.Epositif_big = ((error) - 2)/(3 - 2);
+    result.Epositif_middle = (9 - (error))/(9 - 6);
+    result.Epositif_big = ((error) - 9)/(9 - 6);
   } 
-  else if (error >= 3)
+  else if (error >= 9)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
@@ -322,7 +322,7 @@ fuzzyresult_error fuzzy_error(float error){
 
 fuzzyresult_derror fuzzy_derror(float derror){
   fuzzyresult_derror result;
-  if (derror <= -3) {
+  if (derror <= -9) {
     result.DEnegative_big = 1;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
@@ -331,61 +331,61 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror > -3 && derror < -2) {
-    result.DEnegative_big = (-2 - derror) / (-2 - (-3));
-    result.DEnegative_middle = (derror - (-3)) / (-2 - (-3));
+  else if (derror >= -9 && derror <= -6) {
+    result.DEnegative_big = (-6 - derror) / (-6 - (-9));
+    result.DEnegative_middle = (derror - (-9)) / (-6 - (-9));
     result.DEnegative_small = 0;
     result.DE_zero = 0;
     result.DEpositif_small = 0;
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror > -2 && derror < -1) {
+  else if (derror >= -6 && derror <= -3) {
     result.DEnegative_big = 0;
-    result.DEnegative_middle = (-1 - derror) / (-1 - (-2));
-    result.DEnegative_small = (derror - (-2)) / (-1 - (-2));
+    result.DEnegative_middle = (-3 - derror) / (-3 - (-6));
+    result.DEnegative_small = (derror - (-6)) / (-3 - (-6));
     result.DE_zero = 0;
     result.DEpositif_small = 0;
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror > -1 && derror < 0) {
+  else if (derror >= -3 && derror <= 0) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
-    result.DEnegative_small = (0 - derror) / (0 - (-1));
-    result.DE_zero = (derror - (-1)) / (0 - (-1));
+    result.DEnegative_small = (0 - derror) / (0 - (-3));
+    result.DE_zero = (derror - (-3)) / (0 - (-3));
     result.DEpositif_small = 0;
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror > 0 && derror < 1) {
+  else if (derror >= 0 && derror <= 3) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
-    result.DE_zero = (1 - derror) / (1 - 0);
-    result.DEpositif_small = (derror - 0) / (1 - 0);
+    result.DE_zero = (3 - derror) / (3 - 0);
+    result.DEpositif_small = (derror - 0) / (3 - 0);
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror > 1 && derror < 2) {
+  else if (derror >= 3 && derror <= 6) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
     result.DE_zero = 0;
-    result.DEpositif_small = (2 - derror) / (2 - 1);
-    result.DEpositif_middle = (derror - 1) / (2 - 1);
+    result.DEpositif_small = (6 - derror) / (6 - 3);
+    result.DEpositif_middle = (derror - 3) / (6 - 3);
     result.DEpositif_big = 0;
   }
-  else if (derror > 2 && derror < 3) {
+  else if (derror >= 6 && derror <= 9) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
     result.DE_zero = 0;
     result.DEpositif_small = 0;
-    result.DEpositif_middle = (3 - derror) / (3 - 2);
-    result.DEpositif_big = (derror - 2) / (3 - 2);
+    result.DEpositif_middle = (9 - derror) / (9 - 6);
+    result.DEpositif_big = (derror - 6) / (9 - 6);
   }
-  else if (derror >= 3) {
+  else if (derror >= 9) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
@@ -397,90 +397,322 @@ fuzzyresult_derror fuzzy_derror(float derror){
   return result;
 }
 
+float nb(float alfa) {
+  if (alfa > 0 && alfa < 1) {
+    return (10 - alfa * 2);
+  } else if (alfa == 1) {
+    return 8;
+  } else {
+    return 10;
+  }
+}
+
+float nm (float alfa){
+  if (alfa > 0 && alfa < 1) {
+    return (12 - alfa * 2);
+  } else if (alfa == 1) {
+    return 10;
+  } else {
+    return 12;
+  }
+}
+
+float ns (float alfa){
+  if (alfa > 0 && alfa < 1) {
+    return (14 - alfa * 2);
+  } else if (alfa == 1) {
+    return 12;
+  } else {
+    return 14;
+  }
+}
+
+float z (float alfa){
+  if (alfa > 0 && alfa < 1) {
+    return (16 - alfa * 2);
+  } else if (alfa == 1) {
+    return 14;
+  } else {
+    return 16;
+  }
+}
+
+float ps (float alfa){
+  if (alfa > 0 && alfa < 1) {
+    return (18 - alfa * 2);
+  } else if (alfa == 1) {
+    return 16;
+  } else {
+    return 18;
+  }
+}
+
+float pm (float alfa){
+  if (alfa > 0 && alfa < 1) {
+    return (20 - alfa * 2);
+  } else if (alfa == 1) {
+    return 18;
+  } else {
+    return 20;
+  }
+}
+
+float pb (float alfa){
+  if (alfa > 0 && alfa < 1) {
+    return (20 - alfa * 2);
+  } else if (alfa == 1) {
+    return 20;
+  } else {
+    return 22;
+  }
+}
+
 fuzzyresult_control fuzzy_inference(fuzzyresult_error error, fuzzyresult_derror derror) {
   fuzzyresult_control result;
-  
+
   // Enegative_big
-  result.output[0] = min(error.Enegative_big, derror.DEnegative_big) * (31.0 / 255.0);
-  result.output[1] = min(error.Enegative_big, derror.DEnegative_middle) * (31.0 / 255.0);
-  result.output[2] = min(error.Enegative_big, derror.DEnegative_small) * (63.0 / 255.0);
-  result.output[3] = min(error.Enegative_big, derror.DE_zero) * (63.0 / 255.0);
-  result.output[4] = min(error.Enegative_big, derror.DEpositif_small) * (63.0 / 255.0);
-  result.output[5] = min(error.Enegative_big, derror.DEpositif_middle) * (95.0 / 255.0);
-  result.output[6] = min(error.Enegative_big, derror.DEpositif_big) * (127.0 / 255.0);
+  result.output[0] = nb(min(error.Enegative_big, derror.DEnegative_big));  
+  result.outputmin[0] = min(error.Enegative_big, derror.DEnegative_big);
+  result.output[1] = nb(min(error.Enegative_big, derror.DEnegative_middle));
+  result.outputmin[1] = min(error.Enegative_big, derror.DEnegative_middle);
+  result.output[2] = nm(min(error.Enegative_big, derror.DEnegative_small));
+  result.outputmin[2] = min(error.Enegative_big, derror.DEnegative_small);
+  result.output[3] = nm(min(error.Enegative_big, derror.DE_zero));
+  result.outputmin[3] = min(error.Enegative_big, derror.DE_zero);
+  result.output[4] = nm(min(error.Enegative_big, derror.DEpositif_small));
+  result.outputmin[4] = min(error.Enegative_big, derror.DEpositif_small);
+  result.output[5] = ns(min(error.Enegative_big, derror.DEpositif_middle));
+  result.outputmin[5] = min(error.Enegative_big, derror.DEpositif_middle);
+  result.output[6] = z(min(error.Enegative_big, derror.DEpositif_big));
+  result.outputmin[6] = min(error.Enegative_big, derror.DEpositif_big);
 
   // Enegative_middle
-  result.output[7] = min(error.Enegative_middle, derror.DEnegative_big) * (31.0 / 255.0);
-  result.output[8] = min(error.Enegative_middle, derror.DEnegative_middle) * (63.0 / 255.0);
-  result.output[9] = min(error.Enegative_middle, derror.DEnegative_small) * (63.0 / 255.0);
-  result.output[10] = min(error.Enegative_middle, derror.DE_zero) * (63.0 / 255.0);
-  result.output[11] = min(error.Enegative_middle, derror.DEpositif_small) * (95.0 / 255.0);
-  result.output[12] = min(error.Enegative_middle, derror.DEpositif_middle) * (127.0 / 255.0);
-  result.output[13] = min(error.Enegative_middle, derror.DEpositif_big) * (159.0 / 255.0);
+  result.output[7]  = nb(min(error.Enegative_middle, derror.DEnegative_big));
+  result.outputmin[7] = min(error.Enegative_middle, derror.DEnegative_big);
+  result.output[8]  = nm(min(error.Enegative_middle, derror.DEnegative_middle));
+  result.outputmin[8] = min(error.Enegative_middle, derror.DEnegative_middle);
+  result.output[9]  = nm(min(error.Enegative_middle, derror.DEnegative_small));
+  result.outputmin[9] = min(error.Enegative_middle, derror.DEnegative_small);
+  result.output[10] = nm(min(error.Enegative_middle, derror.DE_zero));
+  result.outputmin[10] = min(error.Enegative_middle, derror.DE_zero);
+  result.output[11] = ns(min(error.Enegative_middle, derror.DEpositif_small));
+  result.outputmin[11] = min(error.Enegative_middle, derror.DEpositif_small);
+  result.output[12] = z(min(error.Enegative_middle, derror.DEpositif_middle));
+  result.outputmin[12] = min(error.Enegative_middle, derror.DEpositif_middle);
+  result.output[13] = ps(min(error.Enegative_middle, derror.DEpositif_big));
+  result.outputmin[13] = min(error.Enegative_middle, derror.DEpositif_big);
 
   // Enegative_small
-  result.output[14] = min(error.Enegative_small, derror.DEpositif_big) * (63.0 / 255.0);
-  result.output[15] = min(error.Enegative_small, derror.DEnegative_big) * (63.0 / 255.0);
-  result.output[16] = min(error.Enegative_small, derror.DEnegative_middle) * (63.0 / 255.0);
-  result.output[17] = min(error.Enegative_small, derror.DEnegative_small) * (95.0 / 255.0);
-  result.output[18] = min(error.Enegative_small, derror.DE_zero) * (127.0 / 255.0);
-  result.output[19] = min(error.Enegative_small, derror.DEpositif_small) * (159.0 / 255.0);
-  result.output[20] = min(error.Enegative_small, derror.DEpositif_middle) * (191.0 / 255.0);
+  result.output[14] = nm(min(error.Enegative_small, derror.DEnegative_big));
+  result.outputmin[14] = min(error.Enegative_small, derror.DEnegative_big);
+  result.output[15] = nm(min(error.Enegative_small, derror.DEnegative_middle));
+  result.outputmin[15] = min(error.Enegative_small, derror.DEnegative_middle);
+  result.output[16] = nm(min(error.Enegative_small, derror.DEnegative_small));
+  result.outputmin[16] = min(error.Enegative_small, derror.DEnegative_small);
+  result.output[17] = ns(min(error.Enegative_small, derror.DE_zero));
+  result.outputmin[17] = min(error.Enegative_small, derror.DE_zero);
+  result.output[18] = z(min(error.Enegative_small, derror.DEpositif_small));
+  result.outputmin[18] = min(error.Enegative_small, derror.DEpositif_small);
+  result.output[19] = ps(min(error.Enegative_small, derror.DEpositif_middle));
+  result.outputmin[19] = min(error.Enegative_small, derror.DEpositif_middle);
+  result.output[20] = pm(min(error.Enegative_small, derror.DEpositif_big));
+  result.outputmin[20] = min(error.Enegative_small, derror.DEpositif_big);
 
   // E_zero
-  result.output[21] = min(error.E_zero, derror.DEpositif_big) * (63.0 / 255.0);
-  result.output[22] = min(error.E_zero, derror.DEnegative_big) * (63.0 / 255.0);
-  result.output[23] = min(error.E_zero, derror.DEnegative_middle) * (95.0 / 255.0);
-  result.output[24] = min(error.E_zero, derror.DEnegative_small) * (127.0 / 255.0);
-  result.output[25] = min(error.E_zero, derror.DE_zero) * (159.0 / 255.0);
-  result.output[26] = min(error.E_zero, derror.DEpositif_small) * (191.0 / 255.0);
-  result.output[27] = min(error.E_zero, derror.DEpositif_middle) * (191.0 / 255.0);
+  result.output[21] = nm(min(error.E_zero, derror.DEnegative_big));
+  result.outputmin[21] = min(error.E_zero, derror.DEnegative_big);
+  result.output[22] = nm(min(error.E_zero, derror.DEnegative_middle));
+  result.outputmin[22] = min(error.E_zero, derror.DEnegative_middle);
+  result.output[23] = ns(min(error.E_zero, derror.DEnegative_small));
+  result.outputmin[23] = min(error.E_zero, derror.DEnegative_small);
+  result.output[24] = z(min(error.E_zero, derror.DE_zero));
+  result.outputmin[24] = min(error.E_zero, derror.DE_zero);
+  result.output[25] = ps(min(error.E_zero, derror.DEpositif_small));
+  result.outputmin[25] = min(error.E_zero, derror.DEpositif_small);
+  result.output[26] = pm(min(error.E_zero, derror.DEpositif_middle));
+  result.outputmin[26] = min(error.E_zero, derror.DEpositif_middle);
+  result.output[27] = pm(min(error.E_zero, derror.DEpositif_big));
+  result.outputmin[27] = min(error.E_zero, derror.DEpositif_big);
 
   // Epositif_small
-  result.output[28] = min(error.Epositif_small, derror.DEpositif_big) * (63.0 / 255.0);
-  result.output[29] = min(error.Epositif_small, derror.DEnegative_big) * (95.0 / 255.0);
-  result.output[30] = min(error.Epositif_small, derror.DEnegative_middle) * (127.0 / 255.0);
-  result.output[31] = min(error.Epositif_small, derror.DEnegative_small) * (159.0 / 255.0);
-  result.output[32] = min(error.Epositif_small, derror.DE_zero) * (191.0 / 255.0);
-  result.output[33] = min(error.Epositif_small, derror.DEpositif_small) * (191.0 / 255.0);
-  result.output[34] = min(error.Epositif_small, derror.DEpositif_middle) * (191.0 / 255.0);
+  result.output[28] = nm(min(error.Epositif_small, derror.DEnegative_big));
+  result.outputmin[28] = min(error.Epositif_small, derror.DEnegative_big);
+  result.output[29] = ns(min(error.Epositif_small, derror.DEnegative_middle));
+  result.outputmin[29] = min(error.Epositif_small, derror.DEnegative_middle);
+  result.output[30] = z(min(error.Epositif_small, derror.DEnegative_small));
+  result.outputmin[30] = min(error.Epositif_small, derror.DEnegative_small);
+  result.output[31] = ps(min(error.Epositif_small, derror.DE_zero));
+  result.outputmin[31] = min(error.Epositif_small, derror.DE_zero);
+  result.output[32] = pm(min(error.Epositif_small, derror.DEpositif_small));
+  result.outputmin[32] = min(error.Epositif_small, derror.DEpositif_small);
+  result.output[33] = pm(min(error.Epositif_small, derror.DEpositif_middle));
+  result.outputmin[33] = min(error.Epositif_small, derror.DEpositif_middle);
+  result.output[34] = pm(min(error.Epositif_small, derror.DEpositif_big));
+  result.outputmin[34] = min(error.Epositif_small, derror.DEpositif_big);
 
   // Epositif_middle
-  result.output[35] = min(error.Epositif_middle, derror.DEpositif_big) * (95.0 / 255.0);
-  result.output[36] = min(error.Epositif_middle, derror.DEnegative_big) * (127.0 / 255.0);
-  result.output[37] = min(error.Epositif_middle, derror.DEnegative_middle) * (159.0 / 255.0);
-  result.output[38] = min(error.Epositif_middle, derror.DEnegative_small) * (191.0 / 255.0);
-  result.output[39] = min(error.Epositif_middle, derror.DE_zero) * (191.0 / 255.0);
-  result.output[40] = min(error.Epositif_middle, derror.DEpositif_small) * (191.0 / 255.0);
-  result.output[41] = min(error.Epositif_middle, derror.DEpositif_middle) * (255.0 / 255.0);
-
+  result.output[35] = ns(min(error.Epositif_middle, derror.DEnegative_big));
+  result.outputmin[35] = min(error.Epositif_middle, derror.DEnegative_big);
+  result.output[36] = z(min(error.Epositif_middle, derror.DEnegative_middle));
+  result.outputmin[36] = min(error.Epositif_middle, derror.DEnegative_middle);
+  result.output[37] = ps(min(error.Epositif_middle, derror.DEnegative_small));
+  result.outputmin[37] = min(error.Epositif_middle, derror.DEnegative_small);
+  result.output[38] = pm(min(error.Epositif_middle, derror.DE_zero));
+  result.outputmin[38] = min(error.Epositif_middle, derror.DE_zero);
+  result.output[39] = pm(min(error.Epositif_middle, derror.DEpositif_small)); 
+  result.outputmin[39] = min(error.Epositif_middle, derror.DEpositif_small);
+  result.output[40] = pm(min(error.Epositif_middle, derror.DEpositif_middle));
+  result.outputmin[40] = min(error.Epositif_middle, derror.DEpositif_middle);
+  result.output[41] = pb(min(error.Epositif_middle, derror.DEpositif_big));      
+  result.outputmin[41] = min(error.Epositif_middle, derror.DEpositif_big);
+  
   // Epositif_big
-  result.output[42] = min(error.Epositif_big, derror.DEpositif_big) * (191.0 / 255.0);
-  result.output[43] = min(error.Epositif_big, derror.DEnegative_big) * (159.0 / 255.0);
-  result.output[44] = min(error.Epositif_big, derror.DEnegative_middle) * (191.0 / 255.0);
-  result.output[45] = min(error.Epositif_big, derror.DEnegative_small) * (191.0 / 255.0);
-  result.output[46] = min(error.Epositif_big, derror.DE_zero) * (191.0 / 255.0);
-  result.output[47] = min(error.Epositif_big, derror.DEpositif_small) * (255.0 / 255.0);
-  result.output[48] = min(error.Epositif_big, derror.DEpositif_middle) * (255.0 / 255.0);
-
+  result.output[42] = z(min(error.Epositif_big, derror.DEnegative_big));
+  result.outputmin[42] = min(error.Epositif_big, derror.DEnegative_big);
+  result.output[43] = ps(min(error.Epositif_big, derror.DEnegative_middle));
+  result.outputmin[43] = min(error.Epositif_big, derror.DEnegative_middle);
+  result.output[44] = pm(min(error.Epositif_big, derror.DEnegative_small));
+  result.outputmin[44] = min(error.Epositif_big, derror.DEnegative_small);
+  result.output[45] = pm(min(error.Epositif_big, derror.DE_zero));
+  result.outputmin[45] = min(error.Epositif_big, derror.DE_zero);
+  result.output[46] = pm(min(error.Epositif_big, derror.DEpositif_small));
+  result.outputmin[46] = min(error.Epositif_big, derror.DEpositif_small);
+  result.output[47] = pb(min(error.Epositif_big, derror.DEpositif_middle));
+  result.outputmin[47] = min(error.Epositif_big, derror.DEpositif_middle);
+  result.output[48] = pb(min(error.Epositif_big, derror.DEpositif_big));
+  result.outputmin[48] = min(error.Epositif_big, derror.DEpositif_big);
   return result;
 }
 
-float defuzzify(fuzzyresult_control result) {
-  float totalWeightedSum = 0.0;
-  float totalSum = 0.0;
-  for (int i = 0; i < 49; i++) {
-    totalWeightedSum += result.output[i] * ((i < 6) ? (31.0 / 255) : (i < 13) ? (63.0 / 255) : (i < 20) ? (95.0 / 255) : 
-    (i < 27) ? (127.0 / 255) : (i < 34) ? (159.0 / 255) : (i < 42) ? (191.0 / 255) : (255.0 / 255));
-    totalSum += result.output[i];
+
+float defuzzyfikasi(fuzzyresult_control result, int size) {
+  float total1 = 0;
+  float total2 = 0;
+
+  for (int i = 0; i < size; i++) {
+    if (result.output[i] > 0) {
+      total1 += result.outputmin[i] * result.output[i];
+      total2 += result.outputmin[i];
+    }
   }
-  float centroid = totalWeightedSum / totalSum;
-  return centroid;
+  float hasil = total1 / total2;
+  return hasil;
 }
 
-
-
 void loop() {
+  // pembacaan sensor arus dan adc 
+  float arus1 = baca_nilai_arus1(arus_satu);
+  float arus2 = baca_nilai_arus2(arus_dua);
+  float arus3 = baca_nilai_arus3(arus_tiga);
+  float nilaiarusADC1 = baca_nilai_adc(arus_satu);
+  float nilaiarusADC2 = baca_nilai_adc(arus_dua);
+  float nilaiarusADC3 = baca_nilai_adc(arus_tiga);
+
+  // pembacaan sensor tegangan dan adc 
+  float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
+  float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
+  float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
+  float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
+  float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
+  float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
+
+  // pembacaan sensor suhu
+  float suhu = baca_sensor_suhu();
+
+  // mengambil data errror
+  float error =  baca_nilai_tegangan1(tegangan_satu) - setpointtegangan;
+  // mengambil data delta error
+  float deltaError = (setpreviousVoltage - setpointtegangan) - error;
+  setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
+ 
+  // Fuzzy Error
+  fuzzyresult_error fuzzyError = fuzzy_error(error);
+  // Fuzzy Delta Error
+  fuzzyresult_derror fuzzyDeltaError = fuzzy_derror(deltaError);
+  // Fuzzy Inference
+  fuzzyresult_control fuzzyControl = fuzzy_inference(fuzzyError, fuzzyDeltaError);
+  // Defuzzyfikasi
+  float defuzzyResult = defuzzyfikasi(fuzzyControl, 49);
+
+  for (int i = 0; i < 49; i++) {
+    Serial.print("Output ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(fuzzyControl.output[i]);
+    Serial.print("Outputmin ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(fuzzyControl.outputmin[i]);
+    delay(1000);
+  }
+
+  Serial.print("Hasil Defuzzyfikasi: ");
+  Serial.println(defuzzyResult);
+  delay(1000);
+
+  // relay cut-off jika overcurrent pada baterai 
+  cutoff_overcurrentbat(arus2);
+  // relay cut-off jika overcurrent pada buckboost
+  cutoff_overcurrent(arus1);
+  // relay cut-off jika overvoltage
+  cutoff_overvoltage(tegangan2);
+  // relay cut-off jika overheat
+  cutoff_overheat(suhu);
+
+  // tampilkan sensor arus pada lcd 
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("I1: ");      
+  lcd.print(arus1);
+  lcd.print("A");
+  lcd.print (" ADC1 ");
+  lcd.print (nilaiarusADC1);
+  lcd.setCursor(0, 1);
+  lcd.print("I2: ");      
+  lcd.print(arus2);
+  lcd.print("A");
+  lcd.print (" ADC2 ");
+  lcd.print (nilaiarusADC2);
+  lcd.setCursor(0, 2);
+  lcd.print("I3: ");      
+  lcd.print(arus3);
+  lcd.print("A");
+  lcd.print (" ADC3 ");
+  lcd.print (nilaiarusADC3);
+  delay(1000);
+
+  // tampilkan sensor tegangan pada lcd
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("V1: ");      
+  lcd.print(tegangan1);
+  lcd.print("V");
+  lcd.print (" ADC1 ");
+  lcd.print (nilaiteganganADC1);
+  lcd.setCursor(0, 1);
+  lcd.print("V2: ");      
+  lcd.print(tegangan2);
+  lcd.print("V");
+  lcd.print (" ADC2 ");
+  lcd.print (nilaiteganganADC2);
+  lcd.setCursor(0, 2);
+  lcd.print("V3: ");      
+  lcd.print(tegangan3);
+  lcd.print("V");
+  lcd.print (" ADC3 ");
+  lcd.print (nilaiteganganADC3);
+  delay(1000);
+
+    // tampilkan sensor suhu pada lcd 
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Suhu: ");      
+  lcd.print(tegangan1);
+  lcd.print("C");
+  delay(1000);
+}
+
+void loopx() {
   // pembacaan sensor arus dan adc 
   float arus1 = baca_nilai_arus1(arus_satu);
   float arus2 = baca_nilai_arus2(arus_dua);
@@ -558,14 +790,7 @@ void loop() {
   float deltaError = error - (setpointtegangan - setpreviousVoltage);
   setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
 
-  // relay cut-off jika overcurrent pada baterai 
-  cutoff_overcurrentbat(arus2);
-  // relay cut-off jika overcurrent pada buckboost
-  cutoff_overcurrent(arus1);
-  // relay cut-off jika overvoltage
-  cutoff_overvoltage(tegangan2);
-  // relay cut-off jika overheat
-  cutoff_overheat(suhu);
+
 
   // Fuzzy Error
   fuzzyresult_error fuzzyError = fuzzy_error(error);
@@ -574,21 +799,11 @@ void loop() {
   // Fuzzy Inference
   fuzzyresult_control fuzzyControl = fuzzy_inference(fuzzyError, fuzzyDeltaError);
   // Defuzzification
-  float output = defuzzify(fuzzyControl);
-
-  float pwmValue = output * 255.0 / 5.0; // Konversi output menjadi rentang nilai PWM (0-255)
-  analogWrite(pin_buck, pwmValue); // Atur nilai PWM pada pin yang sesuai
-
-  // Tampilkan hasil defuzzifikasi pada LCD
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Output: ");
-  lcd.print(output);
-  lcd.setCursor(0, 1);
-  lcd.print("Error: ");
-  lcd.print(error);
-  lcd.setCursor(0, 2);
-  lcd.print("Delta Error: ");
-  lcd.print(deltaError);
+  //------- CobaPWM ---------
+  int pwmbuck = 50;
+  int pwmboost = 0;
+  ledcWrite(pwmChannel18, float ((pwmbuck/100.00) * 255.0)); //buck
+  ledcWrite(pwmChannel19, float ((pwmboost/100.00) * 255.0)); //boost
+  //---------------------------
   delay(1000);
-}
+  }
