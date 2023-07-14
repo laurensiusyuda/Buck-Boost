@@ -42,8 +42,7 @@ float R2 = 7500.0;
 
 //membuat setpoit tegangan 
 float setpointtegangan = 14.4;
-float previousError = 0;
-float setpreviousVoltage = 0.0;
+float previousVoltage = 0.0;
 
 // fuzzifikasi error 
 float Enegative_big;
@@ -609,9 +608,12 @@ void loop() {
   float nilaiarusADC3 = baca_nilai_adc(arus_tiga);
 
   // pembacaan sensor tegangan dan adc 
-  float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
+  // float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
+
+  float tegangan1 =  14;
   float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
   float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
+
   float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
   float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
   float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
@@ -620,10 +622,10 @@ void loop() {
   float suhu = baca_sensor_suhu();
 
   // mengambil data errror
-  float error =  baca_nilai_tegangan1(tegangan_satu) - setpointtegangan;
+  float error =  tegangan1 - setpointtegangan;
   // mengambil data delta error
-  float deltaError = (setpreviousVoltage - setpointtegangan) - error;
-  setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
+  float deltaError =(tegangan1 - previousVoltage) - error;
+  previousVoltage = tegangan1;
  
   // Fuzzy Error
   fuzzyresult_error fuzzyError = fuzzy_error(error);
@@ -633,22 +635,6 @@ void loop() {
   fuzzyresult_control fuzzyControl = fuzzy_inference(fuzzyError, fuzzyDeltaError);
   // Defuzzyfikasi
   float defuzzyResult = defuzzyfikasi(fuzzyControl, 49);
-
-  for (int i = 0; i < 49; i++) {
-    Serial.print("Output ");
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.println(fuzzyControl.output[i]);
-    Serial.print("Outputmin ");
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.println(fuzzyControl.outputmin[i]);
-    delay(1000);
-  }
-
-  Serial.print("Hasil Defuzzyfikasi: ");
-  Serial.println(defuzzyResult);
-  delay(1000);
 
   // relay cut-off jika overcurrent pada baterai 
   cutoff_overcurrentbat(arus2);
@@ -703,107 +689,56 @@ void loop() {
   lcd.print (nilaiteganganADC3);
   delay(1000);
 
-    // tampilkan sensor suhu pada lcd 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Suhu: ");      
-  lcd.print(tegangan1);
-  lcd.print("C");
-  delay(1000);
-}
-
-void loopx() {
-  // pembacaan sensor arus dan adc 
-  float arus1 = baca_nilai_arus1(arus_satu);
-  float arus2 = baca_nilai_arus2(arus_dua);
-  float arus3 = baca_nilai_arus3(arus_tiga);
-  float nilaiarusADC1 = baca_nilai_adc(arus_satu);
-  float nilaiarusADC2 = baca_nilai_adc(arus_dua);
-  float nilaiarusADC3 = baca_nilai_adc(arus_tiga);
-
-  // tampilkan sensor arus pada lcd 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("I1: ");      
-  lcd.print(arus1);
-  lcd.print("A");
-  lcd.print (" ADC1 ");
-  lcd.print (nilaiarusADC1);
-  lcd.setCursor(0, 1);
-  lcd.print("I2: ");      
-  lcd.print(arus2);
-  lcd.print("A");
-  lcd.print (" ADC2 ");
-  lcd.print (nilaiarusADC2);
-  lcd.setCursor(0, 2);
-  lcd.print("I3: ");      
-  lcd.print(arus3);
-  lcd.print("A");
-  lcd.print (" ADC3 ");
-  lcd.print (nilaiarusADC3);
-  delay(1000);
-
-  // pembacaan sensor tegangan dan adc 
-  float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
-  float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
-  float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
-  float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
-  float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
-  float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
-  
-  // tampilkan sensor tegangan pada lcd
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("V1: ");      
-  lcd.print(tegangan1);
-  lcd.print("V");
-  lcd.print (" ADC1 ");
-  lcd.print (nilaiteganganADC1);
-  lcd.setCursor(0, 1);
-  lcd.print("V2: ");      
-  lcd.print(tegangan2);
-  lcd.print("V");
-  lcd.print (" ADC2 ");
-  lcd.print (nilaiteganganADC2);
-  lcd.setCursor(0, 2);
-  lcd.print("V3: ");      
-  lcd.print(tegangan3);
-  lcd.print("V");
-  lcd.print (" ADC3 ");
-  lcd.print (nilaiteganganADC3);
-  delay(1000);
-
-  // pembacaan sensor suhu
-  float suhu = baca_sensor_suhu();
-
   // tampilkan sensor suhu pada lcd 
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Suhu: ");      
-  lcd.print(tegangan1);
+  lcd.print(suhu);
   lcd.print("C");
   delay(1000);
 
-  // mengambil data errror
-  float error = setpointtegangan - baca_nilai_tegangan1(tegangan_satu);
-  // mengambil data delta error
-  float deltaError = error - (setpointtegangan - setpreviousVoltage);
-  setpreviousVoltage = baca_nilai_tegangan1(tegangan_satu);
-
-
-
-  // Fuzzy Error
-  fuzzyresult_error fuzzyError = fuzzy_error(error);
-  // Fuzzy Delta Error
-  fuzzyresult_derror fuzzyDeltaError = fuzzy_derror(deltaError);
-  // Fuzzy Inference
-  fuzzyresult_control fuzzyControl = fuzzy_inference(fuzzyError, fuzzyDeltaError);
-  // Defuzzification
-  //------- CobaPWM ---------
-  int pwmbuck = 50;
-  int pwmboost = 0;
-  ledcWrite(pwmChannel18, float ((pwmbuck/100.00) * 255.0)); //buck
-  ledcWrite(pwmChannel19, float ((pwmboost/100.00) * 255.0)); //boost
-  //---------------------------
+  // menampilkan hasil pada serial print
+  Serial.print("Hasil Pengukuran Tegangan =");
+  Serial.println(tegangan1);
   delay(1000);
+
+  Serial.print("Error =");
+  Serial.println(error);
+  delay(1000);
+  
+  Serial.print("Delta Error =");
+  Serial.println(deltaError);
+  delay(1000);
+
+  for (int i = 0; i < 49; i++) {
+    Serial.print("Output ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(fuzzyControl.output[i]);
+    Serial.print("Outputmin ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(fuzzyControl.outputmin[i]);
+    delay(1000);
   }
+
+  Serial.print("Hasil Defuzzyfikasi: ");
+  Serial.println(defuzzyResult);
+  delay(1000);
+
+  // if (defuzzyResult < 14.4) {
+  //   // Mode boost
+  //   float dutyCycle = (defuzzyResult/ tegangan1) * 255;  // Menghitung duty cycle yang diperlukan
+  //   Serial.print("Nilai Duty Cycle: ");
+  //   Serial.println(dutyCycle);
+  //   ledcWrite(18, dutyCycle);  // Mengatur PWM pada pin yang sesuai
+  //   delay(1000);
+  // } else {
+  //   // Mode buck
+  //   float dutyCycle = (defuzzyResult / tegangan1) * 255;  // Menghitung duty cycle yang diperlukan
+  //   Serial.print("Nilai Duty Cycle: ");
+  //   Serial.println(dutyCycle);
+  //   ledcWrite(19, dutyCycle);  // Mengatur PWM pada pin yang sesuai
+  //   delay(1000);
+  // }
+}
