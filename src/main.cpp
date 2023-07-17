@@ -698,44 +698,46 @@ void loop() {
   Serial.print("Hasil Pengukuran Tegangan =");
   Serial.println(tegangan1);
   delay(1000);
-
   Serial.print("Error =");
   Serial.println(error);
   delay(1000);
-  
   Serial.print("Delta Error =");
   Serial.println(deltaError);
   delay(1000);
-
-  for (int i = 0; i < 49; i++) {
-    Serial.print("Output ");
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.println(fuzzyControl.output[i]);
-    Serial.print("Outputmin ");
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.println(fuzzyControl.outputmin[i]);
-    delay(1000);
-  }
-
   Serial.print("Hasil Defuzzyfikasi: ");
   Serial.println(defuzzyResult);
   delay(1000);
 
   if (defuzzyResult < 14.4) {
-    // Mode boost
-    float dutyCycle = ((14.4 - defuzzyResult)/ 14.4);  // Menghitung duty cycle yang diperlukan
-    Serial.print("Nilai Duty Cycle: ");
-    Serial.println(dutyCycle);
-    ledcWrite(18, dutyCycle);
-    delay(1000);
+  // Mode boost
+  float dutyCycle = ((14.4 - defuzzyResult) / 14.4);  // Menghitung duty cycle yang diperlukan
+  float pwmBoost = 100;
+  float pwmBuck =  (dutyCycle * 255);
+
+  Serial.print("Nilai Duty Cycle (Boost): ");
+  Serial.println(dutyCycle);
+
+  Serial.print("PWM (Boost): ");
+  Serial.println(pwmBoost);
+
+  ledcWrite(18, pwmBuck);
+  ledcWrite(19, pwmBoost);
+
+  delay(1000);
   } else {
-    // Mode buck
-    float dutyCycle = (14.4 / defuzzyResult);  // Menghitung duty cycle yang diperlukan
-    Serial.print("Nilai Duty Cycle: ");
-    Serial.println(dutyCycle);
-    ledcWrite(19, dutyCycle);
-    delay(1000);
+  // Mode buck
+  float dutyCycle = (14.4 / defuzzyResult);  // Menghitung duty cycle yang diperlukan
+  float pwmBoost = 0;
+  float pwmBuck = (dutyCycle * 255);
+
+  Serial.print("Nilai Duty Cycle (Buck): ");
+  Serial.println(dutyCycle);
+
+  Serial.print("PWM (Buck): ");
+  Serial.println(pwmBuck);
+
+  ledcWrite(18, pwmBuck);
+  ledcWrite(19, pwmBoost);
+  delay(1000);
   }
 }
