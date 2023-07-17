@@ -42,7 +42,6 @@ float R2 = 7500.0;
 
 //membuat setpoit tegangan 
 float setpointtegangan = 14.4;
-float previousVoltage = 0.0;
 
 // fuzzifikasi error 
 float Enegative_big;
@@ -610,7 +609,7 @@ void loop() {
   // pembacaan sensor tegangan dan adc 
   // float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
 
-  float tegangan1 =  14;
+  float tegangan1 =  random(8,22);
   float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
   float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
 
@@ -623,9 +622,7 @@ void loop() {
 
   // mengambil data errror
   float error =  tegangan1 - setpointtegangan;
-  // mengambil data delta error
-  float deltaError =(tegangan1 - previousVoltage) - error;
-  previousVoltage = tegangan1;
+  float deltaError  = error;
  
   // Fuzzy Error
   fuzzyresult_error fuzzyError = fuzzy_error(error);
@@ -726,19 +723,19 @@ void loop() {
   Serial.println(defuzzyResult);
   delay(1000);
 
-  // if (defuzzyResult < 14.4) {
-  //   // Mode boost
-  //   float dutyCycle = (defuzzyResult/ tegangan1) * 255;  // Menghitung duty cycle yang diperlukan
-  //   Serial.print("Nilai Duty Cycle: ");
-  //   Serial.println(dutyCycle);
-  //   ledcWrite(18, dutyCycle);  // Mengatur PWM pada pin yang sesuai
-  //   delay(1000);
-  // } else {
-  //   // Mode buck
-  //   float dutyCycle = (defuzzyResult / tegangan1) * 255;  // Menghitung duty cycle yang diperlukan
-  //   Serial.print("Nilai Duty Cycle: ");
-  //   Serial.println(dutyCycle);
-  //   ledcWrite(19, dutyCycle);  // Mengatur PWM pada pin yang sesuai
-  //   delay(1000);
-  // }
+  if (defuzzyResult < 14.4) {
+    // Mode boost
+    float dutyCycle = ((14.4 - defuzzyResult)/ 14.4);  // Menghitung duty cycle yang diperlukan
+    Serial.print("Nilai Duty Cycle: ");
+    Serial.println(dutyCycle);
+    ledcWrite(18, dutyCycle);
+    delay(1000);
+  } else {
+    // Mode buck
+    float dutyCycle = (14.4 / defuzzyResult);  // Menghitung duty cycle yang diperlukan
+    Serial.print("Nilai Duty Cycle: ");
+    Serial.println(dutyCycle);
+    ledcWrite(19, dutyCycle);
+    delay(1000);
+  }
 }
