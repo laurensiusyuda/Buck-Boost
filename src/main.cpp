@@ -8,25 +8,23 @@
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 //inisialisasi pin suhu
-#define DHTPIN 15  
+#define DHTPIN 25  
 #define DHTTYPE DHT11   
 DHT dht(DHTPIN, DHTTYPE);
 
 //inisialisasi pin sensor arus (pin 33,25,26)
-#define arus_satu 33 
-#define arus_dua 25
-#define arus_tiga 26
+#define arus_satu 32 
+#define arus_dua 34
+#define arus_tiga 36
 
 //inisialisasi pin sensor tegangan (pin 34,35,32)
-#define tegangan_satu 34
+#define tegangan_satu 33
 #define tegangan_dua 35 
-#define tegangan_tiga 32
+#define tegangan_tiga 39
 
 // inisialisasi pin relay
-const int relayPin1 = 27;
-const int relayPin2 = 14;
-const int relayPin3 = 12;
-const int relayPin4 = 13;
+const int relayPin1 = 14;
+const int relayPin2 = 27;
 
 //inisialisasi pin kontrol buck boost 
 const int pwmChannel18 = 0;
@@ -37,11 +35,17 @@ const int pwmResolution = 8;
 // membuat setpoint untuk menghitung arus dan tegangan 
 float sensitivitas = 66;
 float ACSoffset = 1650;
-float R1 = 30000.0;
-float R2 = 7500.0;
+float R1 = 100000.0;
+float R2 = 6800.0;
+float R1_1 = 30000.0;
+float R2_2 = 7500.0;
+
 
 //membuat setpoit tegangan 
 float setpointtegangan = 14.4;
+float dutyCycle;
+float pwmBoost = 0;
+float pwmBuck;
 
 // fuzzifikasi error 
 float Enegative_big;
@@ -75,11 +79,11 @@ void setup() {
   pinMode(tegangan_tiga, INPUT);
   // pin mode sensor suhu
   dht.begin();
+
   // pin mode relay 
   pinMode(relayPin1, OUTPUT);
   pinMode(relayPin2, OUTPUT);
-  pinMode(relayPin3, OUTPUT);
-  pinMode(relayPin4, OUTPUT);
+
   //mengatur pwm
   ledcSetup(pwmChannel18, pwmFreq, pwmResolution);
   ledcAttachPin(18, pwmChannel18);
@@ -130,7 +134,7 @@ float baca_nilai_tegangan1(int pin){
 float baca_nilai_tegangan2(int pin){
   int nilaiTegangan = analogRead(pin);
   float Vsensor = nilaiTegangan*(3.3 / 4095.0);
-  float hasil = (1.01*(Vsensor / (R2/(R1+R2))+0.6658566));
+  float hasil = (1.01*(Vsensor / float (R2_2/(R2_2+R1_1))+0.6658566));
   return hasil;
 }
 
@@ -138,7 +142,7 @@ float baca_nilai_tegangan2(int pin){
 float baca_nilai_tegangan3(int pin){
   int nilaiTegangan = analogRead(pin);
   float Vsensor = nilaiTegangan*(3.3 / 4095.0);
-  float hasil = (1.01*(Vsensor / (R2/(R1+R2))+0.6628513));
+  float hasil = (1.01*(Vsensor / (R2_2/(R2_2+R1_1))+0.6628513));
   return hasil;
 }
 
@@ -148,61 +152,31 @@ float baca_sensor_suhu(){
   return celcius;
 }
 
-// fungsi mengatur relay cut ovv overcurrent buck boost 
-void cutoff_overcurrent(float arus){
-  if (arus >= 21) {
-    digitalWrite(relayPin1, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
-    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
-    digitalWrite(relayPin1, LOW); 
+// cutofff rbaterai
+void cutoff_overcurrent(float tegangan){
+  if (tegangan >= 15) {
+    digitalWrite(relayPin1, HIGH);  // Mematikan relay untuk memutuskan aliran listrik
     lcd.setCursor(0, 0);
     lcd.print("Relay: OFF Overcurrent =");
-    lcd.print(arus);
-  } else {
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: ON");
-  }
-}
-
-// fungsi mengatur relay cut off overcurrent baterai
-void cutoff_overcurrentbat(float arus){
-  if (arus >= 21) {
-    digitalWrite(relayPin1, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
-    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
-    digitalWrite(relayPin1, LOW); 
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: OFF Overcurrent =");
-    lcd.print(arus);
-  } else {
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: ON");
-  }
-}
-
-// fungsi mengantur relay cut off overvoltage  
-void cutoff_overvoltage(float tegangan){
-  if (tegangan > 12.0) {
-    digitalWrite(relayPin3, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
-    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
-    digitalWrite(relayPin3, LOW); 
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: OFF Overvoltage =");
     lcd.print(tegangan);
   } else {
+    digitalWrite(relayPin1, LOW);  // Mengaktifkan relay untuk mengalirkan listrik
     lcd.setCursor(0, 0);
     lcd.print("Relay: ON");
   }
 }
 
-// fungsi mengatur relay cut off overheat 
-void cutoff_overheat(float suhu){
-  if (suhu >= 40) {
-    digitalWrite(relayPin3, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
-    delay(1000);                   // Durasi relay aktif (misal: 1 detik)
-    digitalWrite(relayPin3, LOW); 
+// fungsi mengatur relay cut off rbeban 
+void cutoff_overheat(float suhu, float arus){
+  if (suhu >= 40 || arus < 1) {
+    digitalWrite(relayPin2, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
     lcd.setCursor(0, 0);
-    lcd.print("Relay: OFF Overheat =");
+    lcd.print("Relay: OFF");
     lcd.print(suhu);
+    lcd.print("Relay: OFF");
+    lcd.print(arus);
   } else {
+    digitalWrite(relayPin1, LOW);  // Mengaktifkan relay untuk mengalirkan listrik
     lcd.setCursor(0, 0);
     lcd.print("Relay: ON");
   }
@@ -245,7 +219,7 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error >= -9 && error <= -6)
+  else if (error > -9 && error < -6)
   {
     result.Enegative_big = (-6 - (error))/(-6 - (-9));
     result.Enegative_middle =((error) - (-9))/(-6 - (-9));
@@ -255,7 +229,7 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error >= -6 && error <= -3)
+  else if (error > -6 && error < -3)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =(-3 - (error))/(-3 - (-6));
@@ -265,7 +239,7 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error >= -3 && error <= 0)
+  else if (error > -3 && error < 0)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
@@ -275,7 +249,7 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   }
-  else if (error >= 0 && error <= 3)
+  else if (error > 0 && error < 3)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
@@ -285,7 +259,7 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = 0;
     result.Epositif_big = 0;
   } 
-  else if (error >= 3 && error <= 6)
+  else if (error > 3 && error < 6)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
@@ -295,7 +269,7 @@ fuzzyresult_error fuzzy_error(float error){
     result.Epositif_middle = ((error) - 3)/(6 - 3);
     result.Epositif_big = 0;
   } 
-  else if (error >= 6 && error <= 9)
+  else if (error > 6 && error < 9)
   {
     result.Enegative_big = 0;
     result.Enegative_middle =0;
@@ -329,7 +303,7 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror >= -9 && derror <= -6) {
+  else if (derror > -9 && derror < -6) {
     result.DEnegative_big = (-6 - derror) / (-6 - (-9));
     result.DEnegative_middle = (derror - (-9)) / (-6 - (-9));
     result.DEnegative_small = 0;
@@ -338,7 +312,7 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror >= -6 && derror <= -3) {
+  else if (derror > -6 && derror < -3) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = (-3 - derror) / (-3 - (-6));
     result.DEnegative_small = (derror - (-6)) / (-3 - (-6));
@@ -347,7 +321,7 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror >= -3 && derror <= 0) {
+  else if (derror > -3 && derror < 0) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = (0 - derror) / (0 - (-3));
@@ -356,7 +330,7 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror >= 0 && derror <= 3) {
+  else if (derror > 0 && derror < 3) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
@@ -365,7 +339,7 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = 0;
     result.DEpositif_big = 0;
   }
-  else if (derror >= 3 && derror <= 6) {
+  else if (derror > 3 && derror < 6) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
@@ -374,7 +348,7 @@ fuzzyresult_derror fuzzy_derror(float derror){
     result.DEpositif_middle = (derror - 3) / (6 - 3);
     result.DEpositif_big = 0;
   }
-  else if (derror >= 6 && derror <= 9) {
+  else if (derror > 6 && derror < 9) {
     result.DEnegative_big = 0;
     result.DEnegative_middle = 0;
     result.DEnegative_small = 0;
@@ -397,6 +371,16 @@ fuzzyresult_derror fuzzy_derror(float derror){
 
 float nb(float alfa) {
   if (alfa > 0 && alfa < 1) {
+    return (8 - alfa * 3);
+  } else if (alfa == 1) {
+    return 5;
+  } else {
+    return 8;
+  }
+}
+
+float nm (float alfa){
+  if (alfa > 0 && alfa < 1) {
     return (10 - alfa * 2);
   } else if (alfa == 1) {
     return 8;
@@ -405,7 +389,7 @@ float nb(float alfa) {
   }
 }
 
-float nm (float alfa){
+float ns (float alfa){
   if (alfa > 0 && alfa < 1) {
     return (12 - alfa * 2);
   } else if (alfa == 1) {
@@ -415,7 +399,7 @@ float nm (float alfa){
   }
 }
 
-float ns (float alfa){
+float z (float alfa){
   if (alfa > 0 && alfa < 1) {
     return (14 - alfa * 2);
   } else if (alfa == 1) {
@@ -425,7 +409,7 @@ float ns (float alfa){
   }
 }
 
-float z (float alfa){
+float ps (float alfa){
   if (alfa > 0 && alfa < 1) {
     return (16 - alfa * 2);
   } else if (alfa == 1) {
@@ -435,7 +419,7 @@ float z (float alfa){
   }
 }
 
-float ps (float alfa){
+float pm (float alfa){
   if (alfa > 0 && alfa < 1) {
     return (18 - alfa * 2);
   } else if (alfa == 1) {
@@ -445,23 +429,13 @@ float ps (float alfa){
   }
 }
 
-float pm (float alfa){
+float pb (float alfa){
   if (alfa > 0 && alfa < 1) {
     return (20 - alfa * 2);
   } else if (alfa == 1) {
     return 18;
   } else {
     return 20;
-  }
-}
-
-float pb (float alfa){
-  if (alfa > 0 && alfa < 1) {
-    return (20 - alfa * 2);
-  } else if (alfa == 1) {
-    return 20;
-  } else {
-    return 22;
   }
 }
 
@@ -607,12 +581,9 @@ void loop() {
   float nilaiarusADC3 = baca_nilai_adc(arus_tiga);
 
   // pembacaan sensor tegangan dan adc 
-  // float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
-
-  float tegangan1 =  random(8,22);
+  float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
   float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
   float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
-
   float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
   float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
   float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
@@ -633,14 +604,11 @@ void loop() {
   // Defuzzyfikasi
   float defuzzyResult = defuzzyfikasi(fuzzyControl, 49);
 
-  // relay cut-off jika overcurrent pada baterai 
-  cutoff_overcurrentbat(arus2);
-  // relay cut-off jika overcurrent pada buckboost
-  cutoff_overcurrent(arus1);
-  // relay cut-off jika overvoltage
-  cutoff_overvoltage(tegangan2);
-  // relay cut-off jika overheat
-  cutoff_overheat(suhu);
+  // relay cut-off r baterai
+  cutoff_overcurrent(tegangan2);
+
+  // relay cut-off r beban
+  cutoff_overheat(suhu,arus3);
 
   // tampilkan sensor arus pada lcd 
   lcd.clear();
@@ -694,50 +662,48 @@ void loop() {
   lcd.print("C");
   delay(1000);
 
-  // menampilkan hasil pada serial print
-  Serial.print("Hasil Pengukuran Tegangan =");
-  Serial.println(tegangan1);
-  delay(1000);
-  Serial.print("Error =");
-  Serial.println(error);
-  delay(1000);
-  Serial.print("Delta Error =");
-  Serial.println(deltaError);
-  delay(1000);
-  Serial.print("Hasil Defuzzyfikasi: ");
-  Serial.println(defuzzyResult);
-  delay(1000);
-
-  if (defuzzyResult < 14.4) {
-  // Mode boost
-  float dutyCycle = ((14.4 - defuzzyResult) / 14.4);  // Menghitung duty cycle yang diperlukan
-  float pwmBoost = 100;
-  float pwmBuck =  (dutyCycle * 255);
-
-  Serial.print("Nilai Duty Cycle (Boost): ");
-  Serial.println(dutyCycle);
-
-  Serial.print("PWM (Boost): ");
-  Serial.println(pwmBoost);
-
-  ledcWrite(18, pwmBuck);
-  ledcWrite(19, pwmBoost);
-
-  delay(1000);
+  if (tegangan1 >= 22) {
+  dutyCycle = (14.4 / tegangan1);
+  pwmBuck = dutyCycle * 255;
+  pwmBoost = 0;
   } else {
-  // Mode buck
-  float dutyCycle = (14.4 / defuzzyResult);  // Menghitung duty cycle yang diperlukan
-  float pwmBoost = 0;
-  float pwmBuck = (dutyCycle * 255);
+    if (defuzzyResult <= 5) {
+    pwmBoost =0;
+    pwmBuck = 0;
+    delay(1000);
+    } else if (defuzzyResult < 14,4 )
+    {
+    dutyCycle = (14.4 - defuzzyResult) / 14.4;
+    pwmBoost = dutyCycle * 255;
+    pwmBuck = 255;
+    delay(1000);
+    }else {
+    dutyCycle = 14.4 / defuzzyResult;
+    pwmBuck = dutyCycle * 255;
+    pwmBoost = 0;
+    delay(1000);
+  }
+}
+  delay(1000);
+  Serial.print("Nilai Tegangan1: ");
+  Serial.println(tegangan1);
+  Serial.print("Nilai Tegangan2: ");
+  Serial.println(tegangan2);
+  Serial.print("Nilai Tegangan3: ");
+  Serial.println(tegangan3);
+  delay(1000);
 
-  Serial.print("Nilai Duty Cycle (Buck): ");
+  Serial.print("Nilai Duty Cycle: ");
   Serial.println(dutyCycle);
 
   Serial.print("PWM (Buck): ");
   Serial.println(pwmBuck);
 
-  ledcWrite(18, pwmBuck);
-  ledcWrite(19, pwmBoost);
+  Serial.print("PWM (boost): ");
+  Serial.println(pwmBoost);
+
+  ledcWrite(pwmChannel18, pwmBuck);
+  ledcWrite(pwmChannel19, pwmBoost);
   delay(1000);
-  }
+
 }
