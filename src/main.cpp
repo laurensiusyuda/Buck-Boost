@@ -65,6 +65,13 @@ float DEpositif_small;
 float DEpositif_middle;
 float DEpositif_big;
 
+bool flagEksekusiLCD = false;
+int halaman = 1;
+bool flaglcdrelay1 = false;
+bool flaglcdrelay2 = false;
+unsigned long waktuEksekusiLCD = 0;
+int timecounter = 0;
+
 void setup() {
   Serial.begin(9600);
   lcd.init();
@@ -101,24 +108,21 @@ float baca_nilai_adc(int pin){
 //baca sensor arus 1
 float baca_nilai_arus1(int pin) {
   int nilaiArus = analogRead(pin);
-  float Vsensor = (nilaiArus / 4096.00) * 3300.00;
-  float hasil = (1.54 * ((((Vsensor - ACSoffset) / sensitivitas) + 2)) + 0.1837391);
+  float hasil = 0.0095 * nilaiArus - 28.235;
   return hasil;
 }
 
 //baca sensor arus 2 
 float baca_nilai_arus2(int pin){
-  int nilaiArus = analogRead(pin);
-  float Vsensor = (nilaiArus / 4096.00) * 3300.00;
-  float hasil = (1.61 * ((((Vsensor - ACSoffset) / sensitivitas) + 2)) - 0.3927025);
+   int nilaiArus = analogRead(pin);
+  float hasil = 0.0095 * nilaiArus - 28.235;
   return hasil;
 }
 
 //baca sensor arus 3 
 float baca_nilai_arus3(int pin){
-  int nilaiArus = analogRead(pin);
-  float Vsensor = (nilaiArus / 4096.00) * 3300.00;
-  float hasil = (1.54 * ((((Vsensor - ACSoffset) / sensitivitas) + 2)) - 0.4091332);
+   int nilaiArus = analogRead(pin);
+  float hasil = 0.0095 * nilaiArus - 28.235;
   return hasil;
 }
 
@@ -129,7 +133,6 @@ float baca_nilai_tegangan1(int pin){
   float hasil = (1.01*(Vsensor / (R2/(R1+R2))+0.6555551));
   return hasil; 
 }
-
 //baca sensor tegangan 2 
 float baca_nilai_tegangan2(int pin){
   int nilaiTegangan = analogRead(pin);
@@ -137,7 +140,6 @@ float baca_nilai_tegangan2(int pin){
   float hasil = (1.01*(Vsensor / float (R2_2/(R2_2+R1_1))+0.6658566));
   return hasil;
 }
-
 //baca sensor tegangan 3 
 float baca_nilai_tegangan3(int pin){
   int nilaiTegangan = analogRead(pin);
@@ -154,31 +156,25 @@ float baca_sensor_suhu(){
 
 // cutofff rbaterai
 void cutoff_overcurrent(float tegangan){
-  if (tegangan >= 15) {
+  if (tegangan >= 15) // setting point overvoltage charging 
+  {
     digitalWrite(relayPin1, HIGH);  // Mematikan relay untuk memutuskan aliran listrik
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: OFF Overcurrent =");
-    lcd.print(tegangan);
+    flaglcdrelay1 = false;
   } else {
     digitalWrite(relayPin1, LOW);  // Mengaktifkan relay untuk mengalirkan listrik
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: ON");
+    flaglcdrelay1 = true;
   }
 }
 
 // fungsi mengatur relay cut off rbeban 
 void cutoff_overheat(float suhu, float arus){
-  if (suhu >= 40 || arus < 1) {
+  if (suhu >= 40 || arus > 5) // setting point overheat dan overcurrent beban 
+  {
     digitalWrite(relayPin2, HIGH);  // Mengaktifkan relay untuk memutuskan aliran listrik
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: OFF");
-    lcd.print(suhu);
-    lcd.print("Relay: OFF");
-    lcd.print(arus);
+    flaglcdrelay2 = false;
   } else {
     digitalWrite(relayPin1, LOW);  // Mengaktifkan relay untuk mengalirkan listrik
-    lcd.setCursor(0, 0);
-    lcd.print("Relay: ON");
+    flaglcdrelay2 = true;
   }
 }
 
@@ -571,26 +567,58 @@ float defuzzyfikasi(fuzzyresult_control result, int size) {
   return hasil;
 }
 
+// Fungsi untuk timer interrupt
+void timerInterrupt() {
+  if (millis() - waktuEksekusiLCD >= 1000) {
+    waktuEksekusiLCD = millis();
+    flagEksekusiLCD = true;
+    timecounter ++;
+    if (flaglcdrelay1 == false || flaglcdrelay2 == false)
+    {
+      halaman = 0;
+      timecounter = 5;
+    }
+    else if (timecounter >= 5)
+    {
+      timecounter = 0;
+      halaman ++;
+      if (halaman == 4)
+      {
+        halaman = 1;
+      }
+    }
+  }
+}
+
 void loop() {
+  timerInterrupt();
   // pembacaan sensor arus dan adc 
-  float arus1 = baca_nilai_arus1(arus_satu);
-  float arus2 = baca_nilai_arus2(arus_dua);
-  float arus3 = baca_nilai_arus3(arus_tiga);
-  float nilaiarusADC1 = baca_nilai_adc(arus_satu);
-  float nilaiarusADC2 = baca_nilai_adc(arus_dua);
-  float nilaiarusADC3 = baca_nilai_adc(arus_tiga);
+  float arus1 = abs(baca_nilai_arus1(arus_satu));
+  float arus2 = abs(baca_nilai_arus2(arus_dua));
+  float arus3 = abs(baca_nilai_arus3(arus_tiga));
+  int nilaiarusADC1 = baca_nilai_adc(arus_satu);
+  int nilaiarusADC2 = baca_nilai_adc(arus_dua);
+  int nilaiarusADC3 = baca_nilai_adc(arus_tiga);
 
   // pembacaan sensor tegangan dan adc 
   float tegangan1 =  baca_nilai_tegangan1(tegangan_satu);
   float tegangan2 =  baca_nilai_tegangan2(tegangan_dua);
   float tegangan3 =  baca_nilai_tegangan3(tegangan_tiga);
-  float nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
-  float nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
-  float nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
+  int nilaiteganganADC1 = baca_nilai_adc(tegangan_satu);
+  int nilaiteganganADC2 = baca_nilai_adc(tegangan_dua);
+  int nilaiteganganADC3 = baca_nilai_adc(tegangan_tiga);
 
   // pembacaan sensor suhu
   float suhu = baca_sensor_suhu();
 
+if (flagEksekusiLCD == true) {
+  flagEksekusiLCD = false;
+  // relay cut-off r baterai
+  cutoff_overcurrent(tegangan2);
+  // relay cut-off r beban
+  cutoff_overheat(suhu,arus3);
+
+  
   // mengambil data errror
   float error =  tegangan1 - setpointtegangan;
   float deltaError  = error;
@@ -604,106 +632,97 @@ void loop() {
   // Defuzzyfikasi
   float defuzzyResult = defuzzyfikasi(fuzzyControl, 49);
 
-  // relay cut-off r baterai
-  cutoff_overcurrent(tegangan2);
+    if (tegangan1 >= 22) {
+      dutyCycle = (14.4 / tegangan1);
+      pwmBuck = dutyCycle * 255;
+      pwmBoost = 0;
+    } else {
+      if (defuzzyResult <= 5) {
+        pwmBoost = 0;
+        pwmBuck = 0;
+      } else if (defuzzyResult < 14.4) {
+        dutyCycle = (14.4 - defuzzyResult) / 14.4;
+        pwmBoost = dutyCycle * 255;
+        pwmBuck = 255;
+      } else {
+        dutyCycle = 14.4 / defuzzyResult;
+        pwmBuck = dutyCycle * 255;
+        pwmBoost = 0;
+      }
+    }
 
-  // relay cut-off r beban
-  cutoff_overheat(suhu,arus3);
-
-  // tampilkan sensor arus pada lcd 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("I1: ");      
-  lcd.print(arus1);
-  lcd.print("A");
-  lcd.print (" ADC1 ");
-  lcd.print (nilaiarusADC1);
-  lcd.setCursor(0, 1);
-  lcd.print("I2: ");      
-  lcd.print(arus2);
-  lcd.print("A");
-  lcd.print (" ADC2 ");
-  lcd.print (nilaiarusADC2);
-  lcd.setCursor(0, 2);
-  lcd.print("I3: ");      
-  lcd.print(arus3);
-  lcd.print("A");
-  lcd.print (" ADC3 ");
-  lcd.print (nilaiarusADC3);
-  delay(1000);
-
-  // tampilkan sensor tegangan pada lcd
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("V1: ");      
-  lcd.print(tegangan1);
-  lcd.print("V");
-  lcd.print (" ADC1 ");
-  lcd.print (nilaiteganganADC1);
-  lcd.setCursor(0, 1);
-  lcd.print("V2: ");      
-  lcd.print(tegangan2);
-  lcd.print("V");
-  lcd.print (" ADC2 ");
-  lcd.print (nilaiteganganADC2);
-  lcd.setCursor(0, 2);
-  lcd.print("V3: ");      
-  lcd.print(tegangan3);
-  lcd.print("V");
-  lcd.print (" ADC3 ");
-  lcd.print (nilaiteganganADC3);
-  delay(1000);
-
-  // tampilkan sensor suhu pada lcd 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Suhu: ");      
-  lcd.print(suhu);
-  lcd.print("C");
-  delay(1000);
-
-  if (tegangan1 >= 22) {
-  dutyCycle = (14.4 / tegangan1);
-  pwmBuck = dutyCycle * 255;
-  pwmBoost = 0;
-  } else {
-    if (defuzzyResult <= 5) {
-    pwmBoost =0;
-    pwmBuck = 0;
-    delay(1000);
-    } else if (defuzzyResult < 14,4 )
-    {
-    dutyCycle = (14.4 - defuzzyResult) / 14.4;
-    pwmBoost = dutyCycle * 255;
-    pwmBuck = 255;
-    delay(1000);
-    }else {
-    dutyCycle = 14.4 / defuzzyResult;
-    pwmBuck = dutyCycle * 255;
-    pwmBoost = 0;
-    delay(1000);
+  if (flaglcdrelay1 == false || flaglcdrelay2 == false )
+  {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Relay: OFF");
+  }  
+  else if (halaman == 1)
+  {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("I1: ");      
+    lcd.print(arus1);
+    lcd.print("A");
+    lcd.print (" ADC1 ");
+    lcd.print (nilaiarusADC1);
+    lcd.setCursor(0, 1);
+    lcd.print("I2: ");      
+    lcd.print(arus2);
+    lcd.print("A");
+    lcd.print (" ADC2 ");
+    lcd.print (nilaiarusADC2);
+    lcd.setCursor(0, 2);
+    lcd.print("I3: ");      
+    lcd.print(arus3);
+    lcd.print("A");
+    lcd.print (" ADC3 ");
+    lcd.print (nilaiarusADC3);
   }
-}
-  delay(1000);
+  else if (halaman == 2)
+  {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("V1: ");      
+    lcd.print(tegangan1);
+    lcd.print("V");
+    lcd.print (" ADC1 ");
+    lcd.print (nilaiteganganADC1);
+    lcd.setCursor(0, 1);
+    lcd.print("V2: ");      
+    lcd.print(tegangan2);
+    lcd.print("V");
+    lcd.print (" ADC2 ");
+    lcd.print (nilaiteganganADC2);
+    lcd.setCursor(0, 2);
+    lcd.print("V3: ");      
+    lcd.print(tegangan3);
+    lcd.print("V");
+    lcd.print (" ADC3 ");
+    lcd.print (nilaiteganganADC3);
+  }
+  else if (halaman == 3 )
+  {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Suhu: ");      
+    lcd.print(suhu);
+    lcd.print("C");
+  }
   Serial.print("Nilai Tegangan1: ");
   Serial.println(tegangan1);
   Serial.print("Nilai Tegangan2: ");
   Serial.println(tegangan2);
   Serial.print("Nilai Tegangan3: ");
   Serial.println(tegangan3);
-  delay(1000);
-
   Serial.print("Nilai Duty Cycle: ");
   Serial.println(dutyCycle);
-
   Serial.print("PWM (Buck): ");
   Serial.println(pwmBuck);
-
   Serial.print("PWM (boost): ");
-  Serial.println(pwmBoost);
-
+  Serial.println(pwmBoost); 
   ledcWrite(pwmChannel18, pwmBuck);
   ledcWrite(pwmChannel19, pwmBoost);
-  delay(1000);
-
+  }
+  Serial.println(flagEksekusiLCD);
 }
